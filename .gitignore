@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / Test Artifacts & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.cache/
+
+# Environments & Virtual Envs
+.venv/
+venv/
+ENV/
+env/
+
+# Environment files & secrets (preserve .env.example)
+.env
+*.env
+.env.*
+!.env.example
+
+# Temporary files & Editor artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Backups & Archived Session Dumps
+*.bak
+*.bak_*
+server_backup_poc.py
+session-*.md
+old/
+.soup-crashes/
+Advanced Versions/
+stitch_scamshield_ai_security_dashboard/
+stitch_scamshield_ai_security_dashboard.zip
+
+# Fine-tuned model artifacts (too large for git)
+finetune/output/
+finetune/merged/
+finetune/gguf/
+finetune/llama.cpp/
+
+# Local runtime data & audio recordings (generated dynamically at runtime)
+data/

@@ -1,0 +1,41 @@
+transcript,sender_type,label
+Please share your OTP so I can verify your account,unknown,1
+Install AnyDesk and share the code with me immediately,plain_number,1
+Your account will be blocked within 2 hours. Share your PIN now.,plain_number,1
+This is SBI customer care. We need your CVV to update KYC.,unknown,1
+Urgent: your account has been suspended. Call back now.,plain_number,1
+Give me your net banking password so I can fix the issue,unknown,1
+I am from cyber crime department. Send your Aadhaar number.,plain_number,1
+Your PAN will be deactivated. Act now or face legal action.,unknown,1
+Tell me the OTP that was just sent to your phone,plain_number,1
+"Install TeamViewer on your PC, I will fix it remotely",unknown,1
+Share your card number and CVV for verification,plain_number,1
+Final warning: account will be closed within 1 hour,unknown,1
+I am calling from HDFC bank helpline. Enter your PIN to proceed.,plain_number,1
+Your SIM will be deactivated today. Press 1 to confirm.,unknown,1
+Send your OTP to 12345 immediately or lose your account,plain_number,1
+We need your internet banking password to process the refund,unknown,1
+Police complaint will be filed if you do not share OTP now,plain_number,1
+This is income tax department. Your PAN is blocked. Share Aadhaar.,unknown,1
+Act immediately: your account has been compromised. Send PIN.,plain_number,1
+Install Ultraviewer and let me access your computer screen,unknown,1
+"Hi, how are you doing today?",dlt_registered,0
+"Meeting tomorrow at 10am, don't forget to bring the report",dlt_registered,0
+Your package has been delivered to your doorstep,dlt_registered,0
+Happy birthday! Hope you have a wonderful day,dlt_registered,0
+Reminder: dentist appointment on Friday at 3pm,dlt_registered,0
+The quarterly report is ready for review,dlt_registered,0
+Lunch at noon? Let me know if you are free,dlt_registered,0
+Your order #1234 has shipped and will arrive Tuesday,dlt_registered,0
+"Team standup in 5 minutes, please join the call",dlt_registered,0
+Thanks for helping with the project last week,dlt_registered,0
+Can you send me the updated spreadsheet?,dlt_registered,0
+Movie tonight? There is a new thriller at the cinema,dlt_registered,0
+Your subscription renews on the 15th of next month,dlt_registered,0
+"Great presentation today, the client was impressed",dlt_registered,0
+Happy anniversary! Wishing you both all the best,dlt_registered,0
+The weather looks great this weekend for a hike,dlt_registered,0
+Please review the attached document when you get a chance,dlt_registered,0
+Your flight is confirmed for tomorrow at 8am,dlt_registered,0
+Just checking in — are we still on for Thursday?,dlt_registered,0
+The kids had a great time at the party yesterday,dlt_registered,0

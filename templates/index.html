@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield AI - Security Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet">
+  <style>
+    @layer base {
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        overscroll-behavior: none;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #0c0e14;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #282a30;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3e484f;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "#111319",
+            "surface": "#111319",
+            "surface-dim": "#111319",
+            "surface-bright": "#373940",
+            "surface-container-lowest": "#0c0e14",
+            "surface-container-low": "#191b22",
+            "surface-container": "#1d1f26",
+            "surface-container-high": "#282a30",
+            "surface-container-highest": "#33353b",
+            "on-surface": "#e2e2ea",
+            "on-surface-variant": "#bdc8d1",
+            "outline": "#87929a",
+            "outline-variant": "#3e484f",
+            "primary": "#8ed5ff",
+            "primary-container": "#38bdf8",
+            "on-primary": "#00354a",
+            "secondary": "#4edea3",
+            "secondary-container": "#00a572",
+            "on-secondary": "#003824",
+            "tertiary": "#ffbcb7",
+            "tertiary-container": "#ff938c",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+</head>
+
+<body
+  class="bg-surface-container-lowest text-on-surface font-sans antialiased selection:bg-primary/20 selection:text-primary">
+
+  <!-- ========================================================================= -->
+  <!-- PERSISTENT TOP NAVIGATION HEADER                                         -->
+  <!-- ========================================================================= -->
+  <header
+    class="fixed top-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl border-b border-surface-container-high/40">
+    <div class="w-full px-6 py-2.5 flex flex-col justify-between gap-2 max-w-[1720px] mx-auto">
+
+      <!-- Top Row: Brand, Live Telemetry Tags & Status -->
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+
+        <!-- Brand & Version -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary shadow-sm border border-surface-container-high/60">
+            <span class="material-symbols-outlined text-[22px]">security</span>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <span class="font-bold text-base text-on-surface tracking-tight uppercase">ScamShield AI Server</span>
+            <span
+              class="font-mono text-[11px] text-primary bg-surface-container px-2 py-0.5 rounded border border-primary/20 font-semibold">v3.0-PROD</span>
+          </div>
+        </div>
+
+        <!-- System Telemetry Chips (Live WebSocket & Engine State) -->
+        <div class="hidden lg:flex items-center gap-2 overflow-x-auto">
+          <!-- Server Health -->
+          <div id="srvStatusBadge"
+            class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container/80 border border-outline-variant/30 font-mono text-xs">
+            <span id="srvStatusPulse" class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            <span id="srvStatusText" class="text-secondary font-medium uppercase tracking-wide">ONLINE</span>
+          </div>
+
+          <!-- Model Readiness Status Badge (Hot vs Loading) -->
+          <div id="modelStatusBadge"
+            class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container/80 border border-outline-variant/30 font-mono text-xs"
+            title="STT & LLM Memory Readiness">
+            <span id="modelStatusPulse" class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+            <span id="modelStatusText" class="text-error font-medium">🔥 Model: Hot</span>
+          </div>
+
+          <!-- Mode Chip -->
+          <div class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-mono text-xs">
+            <span>MODE: <strong id="lblMode" class="text-on-surface">ALL</strong></span>
+          </div>
+
+          <!-- STT Engine Chip -->
+          <div id="hdrSttChip"
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-mono text-xs border border-outline-variant/20">
+            <span id="hdrSttDot" class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            <span>STT: <strong id="lblSTT" class="text-secondary font-medium">Parakeet-CTC 0.6B</strong></span>
+          </div>
+
+          <!-- Compute Accelerator -->
+          <div class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-mono text-xs">
+            <span>DEVICE: <strong id="lblDevice" class="text-secondary font-medium">CUDA</strong></span>
+          </div>
+
+          <!-- LLM Engine Status -->
+          <div class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-mono text-xs">
+            <span>LLM: <strong id="lblLLM" class="text-primary font-medium">phi3.5 (OK)</strong></span>
+          </div>
+
+          <!-- Active Streams -->
+          <div
+            class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant font-mono text-xs">
+            <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            <span>Streams: <strong id="lblStreams" class="text-on-surface">0</strong></span>
+          </div>
+        </div>
+
+        <!-- Quick Reset Dashboard Action -->
+        <div class="flex items-center gap-2">
+          <button id="btn-quick-reset" onclick="clearDashboard()"
+            class="flex items-center gap-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/30 px-3 py-1.5 rounded-lg font-mono text-xs transition-colors shadow-sm"
+            title="Clear current session and set monitor to idle">
+            <span class="material-symbols-outlined text-[15px] text-outline">restart_alt</span>
+            <span>Reset Monitor</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Row: Navigation Tabs -->
+      <div class="flex items-center justify-between pt-1">
+        <nav class="flex items-center gap-1.5">
+          <button onclick="switchTab('tabLive', this)"
+            class="nav-tab active px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all bg-surface-container-high text-primary font-semibold shadow-sm flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">radar</span>
+            <span>Live Threat Monitor</span>
+          </button>
+          <button onclick="switchTab('tabCalls', this)"
+            class="nav-tab px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">folder_open</span>
+            <span>Saved Calls & Evidence</span>
+            <span id="callCountBadge"
+              class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-surface-container-highest text-on-surface font-bold">0</span>
+          </button>
+          <button onclick="switchTab('tabSms', this)"
+            class="nav-tab px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">sms</span>
+            <span>SMS Threat Monitor</span>
+            <span id="smsCountBadge"
+              class="font-mono text-[10px] px-1.5 py-0.2 rounded bg-surface-container-highest text-on-surface font-bold">0</span>
+          </button>
+          <button onclick="switchTab('tabSim', this)"
+            class="nav-tab px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">science</span>
+            <span>Threat Simulator</span>
+          </button>
+          <button onclick="switchTab('tabConfig', this)"
+            class="nav-tab px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">tune</span>
+            <span>Server Settings</span>
+          </button>
+        </nav>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN WORKSPACE CONTAINER                                                 -->
+  <!-- ========================================================================= -->
+  <main class="w-full pt-28 bg-surface-container-lowest min-h-screen">
+    <div class="px-6 py-4 max-w-[1720px] mx-auto w-full space-y-4">
+
+      <!-- ===================================================================== -->
+      <!-- TAB 1: LIVE THREAT MONITOR (ACTIVE / LAST CALL)                       -->
+      <!-- ===================================================================== -->
+      <div id="tabLive" class="tab-content active space-y-4">
+
+        <!-- Top Telemetry Action Strip -->
+        <div
+          class="bg-surface-container-low rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm border border-surface-container-high/40">
+          <div class="flex flex-wrap items-center gap-3">
+            <div
+              class="flex items-center gap-2 bg-surface-container px-3 py-1 rounded-lg border border-surface-container-high/50">
+              <span class="font-mono text-xs text-outline uppercase tracking-wider">Session Key:</span>
+              <span id="liveCallId"
+                class="font-mono text-xs text-primary font-bold select-all tracking-wide">IDLE</span>
+              <button onclick="copySessionId()"
+                class="text-on-surface-variant hover:text-primary transition-colors flex items-center p-0.5 rounded"
+                title="Copy Session ID">
+                <span class="material-symbols-outlined text-[15px]">content_copy</span>
+              </button>
+              <span id="copyFeedback" class="font-mono text-[10px] text-secondary hidden">COPIED</span>
+            </div>
+
+            <!-- Call State / Recording Timer -->
+            <div id="liveStatusContainer"
+              class="flex items-center gap-1.5 bg-surface-container text-on-surface-variant px-3 py-1 rounded-lg border border-surface-container-high/50 font-mono text-xs">
+              <span id="liveStatusDot" class="w-2 h-2 rounded-full bg-outline"></span>
+              <span id="liveCallDuration" class="font-bold">00:00 IDLE</span>
+            </div>
+
+            <!-- Chunk Count -->
+            <div class="hidden sm:flex items-center gap-1.5 font-mono text-xs text-outline-variant">
+              <span>Processed:</span>
+              <span id="liveChunksCount" class="text-on-surface font-semibold">0 chunks</span>
+              <span>•</span>
+              <span>16kHz Mono PCM</span>
+            </div>
+
+            <!-- Streaming Latency Monitor Chip -->
+            <div id="liveLatencyContainer"
+              class="flex items-center gap-1.5 bg-surface-container px-2.5 py-1 rounded-lg border border-surface-container-high/50 font-mono text-xs"
+              title="Real-time speech-to-threat processing latency">
+              <span class="material-symbols-outlined text-[15px] text-secondary">bolt</span>
+              <span class="text-outline text-[10px] uppercase">LATENCY:</span>
+              <span id="liveLatencyValue" class="text-secondary font-bold font-mono text-xs">-- ms</span>
+              <span id="liveLatencyBadge"
+                class="text-[9px] px-1.5 py-0.2 rounded bg-surface-container-high text-outline font-bold uppercase tracking-wider">STANDBY</span>
+            </div>
+
+            <!-- Active STT Provider Badge -->
+            <div id="liveProviderContainer"
+              class="flex items-center gap-1.5 bg-surface-container px-2.5 py-1 rounded-lg border border-surface-container-high/50 font-mono text-xs">
+              <span id="liveProviderDot" class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              <span class="text-outline text-[10px] uppercase">ENGINE:</span>
+              <span id="liveProviderBadge" class="text-secondary font-bold text-xs uppercase font-mono">PARAKEET-CTC
+                0.6B</span>
+            </div>
+
+            <!-- Cryptographic Audio Hash Indicator -->
+            <div id="liveHashContainer"
+              class="hidden flex items-center gap-1.5 bg-surface-container px-2.5 py-1 rounded-lg border border-surface-container-high/50 font-mono text-xs">
+              <span class="text-secondary flex items-center gap-1" title="Cryptographically verified tamper-free audio">
+                <span class="material-symbols-outlined text-[14px]">verified</span>
+                <span class="text-[10px] font-bold">TAMPER-FREE</span>
+              </span>
+              <span id="liveHashValue" class="text-on-surface truncate max-w-[130px] text-[10px] select-all font-mono"
+                title="Click to copy full SHA-256"></span>
+              <button onclick="copyLiveHash()"
+                class="text-on-surface-variant hover:text-primary transition-colors flex items-center p-0.5 rounded cursor-pointer"
+                title="Copy SHA-256 Hash">
+                <span id="liveHashCopyIcon" class="material-symbols-outlined text-[13px]">content_copy</span>
+              </button>
+              <span id="copyLiveHashFeedback" class="font-mono text-[9px] text-secondary hidden">COPIED</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="clearDashboard()"
+              class="flex items-center gap-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface px-3 py-1.5 rounded-lg text-xs font-mono transition-all border border-surface-container-high shadow-sm">
+              <span class="material-symbols-outlined text-[16px] text-outline">restart_alt</span>
+              <span>Clear Monitor / Set Idle</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main 2-Column Threat Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+
+          <!-- LEFT COLUMN: Threat Vector Gauge & Diagnostics (5 cols) -->
+          <div class="xl:col-span-5 flex flex-col gap-4">
+
+            <!-- Radar / Radial Gauge Card -->
+            <div
+              class="bg-surface-container-low rounded-xl p-5 flex flex-col items-center justify-center relative overflow-hidden shadow-md border border-surface-container-high/40">
+              <div class="w-full flex items-center justify-between pb-2 mb-1 border-b border-surface-container-high/40">
+                <div class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-primary text-[20px]">security</span>
+                  <span class="font-bold text-xs text-on-surface tracking-tight uppercase">Threat Vector Radar</span>
+                </div>
+                <span id="gaugeTierBadge"
+                  class="font-mono text-[11px] text-outline bg-surface-container px-2 py-0.5 rounded font-semibold tracking-wider">STANDBY</span>
+              </div>
+
+              <!-- SVG Circular Radial Meter -->
+              <div class="relative w-64 h-64 flex items-center justify-center my-2">
+                <!-- Background decorative radar circles -->
+                <svg class="absolute inset-0 w-full h-full pointer-events-none text-surface-container-high"
+                  viewBox="0 0 280 280">
+                  <circle cx="140" cy="140" fill="none" opacity="0.4" r="130" stroke="currentColor"
+                    stroke-dasharray="2 6" stroke-width="1"></circle>
+                  <circle cx="140" cy="140" fill="none" opacity="0.3" r="105" stroke="currentColor" stroke-width="0.75">
+                  </circle>
+                  <circle cx="140" cy="140" fill="none" opacity="0.2" r="80" stroke="currentColor"
+                    stroke-dasharray="1 4" stroke-width="0.5"></circle>
+                  <line opacity="0.2" stroke="currentColor" stroke-dasharray="2 4" stroke-width="0.5" x1="140" x2="140"
+                    y1="5" y2="275"></line>
+                  <line opacity="0.2" stroke="currentColor" stroke-dasharray="2 4" stroke-width="0.5" x1="5" x2="275"
+                    y1="140" y2="140"></line>
+                </svg>
+
+                <!-- Primary Progress Ring -->
+                <svg class="w-56 h-56 -rotate-90 transform" viewBox="0 0 240 240">
+                  <circle class="text-surface-container" cx="120" cy="120" fill="none" r="100" stroke="currentColor"
+                    stroke-dasharray="628" stroke-dashoffset="0" stroke-width="14"></circle>
+                  <circle id="gaugeProgressRing" class="transition-all duration-700 ease-out" cx="120" cy="120"
+                    fill="none" r="100" stroke="url(#threat-gradient)" stroke-dasharray="628" stroke-dashoffset="628"
+                    stroke-linecap="round" stroke-width="14"></circle>
+                  <defs>
+                    <linearGradient id="threat-gradient" x1="0%" x2="100%" y1="0%" x2="100%">
+                      <stop offset="0%" stop-color="#38bdf8"></stop>
+                      <stop offset="50%" stop-color="#f59e0b"></stop>
+                      <stop offset="100%" stop-color="#ef4444"></stop>
+                    </linearGradient>
+                  </defs>
+                </svg>
+
+                <!-- Gauge Numeric Score Center Display -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span class="font-mono text-[10px] text-outline uppercase tracking-widest font-medium">Aggregated
+                    Risk</span>
+                  <div class="flex items-baseline gap-1 mt-1">
+                    <span id="gaugeScore"
+                      class="font-bold text-5xl leading-none text-on-surface tracking-tighter">0</span>
+                    <span class="font-mono text-sm text-outline">/100</span>
+                  </div>
+                  <div
+                    class="flex items-center gap-1.5 mt-2 bg-surface-container px-2.5 py-0.5 rounded-full border border-surface-container-high">
+                    <span id="gaugePulseDot" class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                    <span id="gaugeStatusText" class="font-mono text-[10px] text-outline font-semibold">IDLE</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Verdict Classification Banner -->
+              <div class="w-full mt-1 flex flex-col items-center gap-2">
+                <div id="verdictBanner"
+                  class="w-full py-2 px-4 bg-surface-container text-on-surface-variant rounded-lg flex items-center justify-center gap-2 border border-surface-container-high transition-colors">
+                  <span id="verdictIcon" class="material-symbols-outlined text-[18px]">verified_user</span>
+                  <span id="verdictLabel" class="font-mono text-xs font-bold tracking-widest uppercase">IDLE - WAITING
+                    FOR STREAM</span>
+                </div>
+                <div class="flex items-center justify-center gap-4 font-mono text-[11px] text-outline pt-1">
+                  <div class="flex items-center gap-1.5"><span
+                      class="w-2 h-2 rounded-full bg-secondary"></span><span>Clean (0-39)</span></div>
+                  <span>•</span>
+                  <div class="flex items-center gap-1.5"><span
+                      class="w-2 h-2 rounded-full bg-amber-400"></span><span>Suspicious (40-69)</span></div>
+                  <span>•</span>
+                  <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-error"></span><span>Scam
+                      (≥70)</span></div>
+                </div>
+              </div>
+
+              <!-- Triple Sub-Metrics Grid -->
+              <div
+                class="w-full grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-surface-container-high/40 text-center font-mono">
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-outline uppercase">Peak Risk</span>
+                  <span id="statPeak" class="text-base font-bold text-on-surface">0/100</span>
+                </div>
+                <div class="flex flex-col border-x border-surface-container-high/40">
+                  <span class="text-[10px] text-outline uppercase">Smoothed Avg</span>
+                  <span id="statAvg" class="text-base font-semibold text-on-surface">0.0/100</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-outline uppercase">Raw Chunk</span>
+                  <span id="statRaw" class="text-base font-semibold text-on-surface">0/100</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Forensic Reasoning Card -->
+            <div
+              class="bg-surface-container-low rounded-xl p-4 shadow-sm flex flex-col gap-1.5 border border-surface-container-high/40">
+              <div
+                class="flex items-center gap-2 text-primary font-mono text-xs font-semibold uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[18px]">psychology</span>
+                <span>Forensic Reasoning & Pattern Analysis</span>
+              </div>
+              <p id="threatReason"
+                class="text-xs text-on-surface leading-relaxed mt-1 bg-surface-container/60 p-3 rounded-lg border border-surface-container-high/30">
+                Waiting for incoming audio chunks from /audio-stream WebSocket...
+              </p>
+            </div>
+
+            <!-- Active Signal Vectors (Threat Flags) -->
+            <div
+              class="bg-surface-container-low rounded-xl p-4 flex flex-col gap-3 shadow-sm border border-surface-container-high/40">
+              <div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/40">
+                <span class="font-bold text-xs text-on-surface uppercase tracking-tight">Active Threat Vectors</span>
+                <span id="threatFlagsCount"
+                  class="font-mono text-[10px] text-outline bg-surface-container px-2 py-0.5 rounded">0 DETECTED</span>
+              </div>
+              <div id="threatFlagsContainer" class="flex flex-col gap-1.5">
+                <div class="text-xs text-outline-variant italic py-2 text-center">No active threat flags detected.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: Live Transcript & Multi-Engine Forensic Matrix (7 cols) -->
+          <div class="xl:col-span-7 flex flex-col gap-4">
+
+            <!-- Live Rolling Transcript Terminal -->
+            <div
+              class="bg-surface-container-lowest rounded-xl flex flex-col shadow-lg border border-surface-container-high/50 overflow-hidden">
+              <!-- Terminal Header -->
+              <div
+                class="bg-surface-container-high px-4 py-2.5 flex items-center justify-between border-b border-surface-container-highest">
+                <div class="flex items-center gap-3">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-error/80"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400/80"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-secondary/80"></span>
+                  </div>
+                  <div class="flex items-center gap-1.5 font-mono text-xs text-on-surface">
+                    <span class="w-1.5 h-3 bg-secondary inline-block animate-pulse"></span>
+                    <span class="font-semibold text-secondary">LIVE ROLLING TRANSCRIPT</span>
+                    <span id="termSttBadge"
+                      class="text-outline text-[11px] font-mono px-2 py-0.5 rounded bg-surface-container border border-surface-container-high/60">(parakeet-ctc
+                      0.6b)</span>
+                  </div>
+                  <!-- Partial Stream Badge -->
+                  <div id="livePartialBadge"
+                    class="hidden flex items-center gap-1 font-mono text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/40 animate-pulse font-semibold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+                    <span>STREAMING PARTIAL</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <!-- Live Equalizer Animation -->
+                  <div id="liveWaveformEqualizer" class="flex items-end gap-[3px] h-3.5 opacity-40 transition-opacity">
+                    <span class="w-[2.5px] bg-primary h-2 animate-pulse"></span>
+                    <span class="w-[2.5px] bg-primary h-3.5 animate-bounce"></span>
+                    <span class="w-[2.5px] bg-primary h-2.5 animate-pulse"></span>
+                    <span class="w-[2.5px] bg-primary h-1"></span>
+                    <span class="w-[2.5px] bg-primary h-3 animate-bounce"></span>
+                  </div>
+                  <div
+                    class="flex items-center gap-1.5 bg-surface-container-low px-2 py-0.5 rounded font-mono text-[10px] text-secondary">
+                    <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    <span>Auto-scroll</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Terminal Log Window -->
+              <div id="transcriptFeed"
+                class="p-4 flex flex-col gap-2 font-mono text-xs leading-relaxed min-h-[300px] max-h-[340px] overflow-y-auto">
+                <div class="text-outline text-center py-10 italic">
+                  Awaiting audio speech chunks from caller stream...
+                </div>
+              </div>
+
+              <!-- Terminal Status Footer -->
+              <div
+                class="bg-surface-container-high/40 px-4 py-1.5 flex items-center justify-between font-mono text-[11px] text-outline border-t border-surface-container-high/40">
+                <span id="termSttInfo">STT: Faster-Whisper medium on CUDA</span>
+                <span id="termChunksInfo">Chunks: 0 received</span>
+              </div>
+            </div>
+
+            <!-- Multi-Engine Forensics Ensemble Stack -->
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center justify-between pb-1">
+                <span class="font-bold text-xs text-on-surface uppercase tracking-tight">Multi-Engine Forensic
+                  Consensus</span>
+                <span
+                  class="font-mono text-[10px] text-primary bg-surface-container px-2 py-0.5 rounded-full font-medium">3
+                  ENGINES CONCURRENT</span>
+              </div>
+
+              <!-- Engine 1: Rule-Based -->
+              <div
+                class="bg-surface-container-low rounded-xl p-3.5 shadow-sm flex flex-col gap-2 border border-surface-container-high/40">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[18px]">rule</span>
+                    <span class="text-xs font-semibold text-on-surface">Rule-Based Deterministic Engine</span>
+                  </div>
+                  <div class="flex items-center gap-1 font-mono text-xs">
+                    <span class="text-outline">Score:</span>
+                    <span id="scoreRB" class="text-on-surface font-bold">0/100</span>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+                  <div id="barRB" class="bg-primary h-full rounded-full transition-all duration-500" style="width: 0%">
+                  </div>
+                </div>
+                <div id="detailsRB" class="text-[11px] text-on-surface-variant font-mono truncate">
+                  Status: Ready for regex trigger evaluation
+                </div>
+              </div>
+
+              <!-- Engine 2: XGBoost ML Engine -->
+              <div
+                class="bg-surface-container-low rounded-xl p-3.5 shadow-sm flex flex-col gap-2 border border-surface-container-high/40">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary text-[18px]">neurology</span>
+                    <span class="text-xs font-semibold text-on-surface">XGBoost ML Feature Engine</span>
+                  </div>
+                  <div class="flex items-center gap-1 font-mono text-xs">
+                    <span class="text-outline">Score:</span>
+                    <span id="scoreXGB" class="text-on-surface font-bold">0/100</span>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+                  <div id="barXGB" class="bg-secondary h-full rounded-full transition-all duration-500"
+                    style="width: 0%"></div>
+                </div>
+                <div id="detailsXGB" class="text-[11px] text-on-surface-variant font-mono truncate">
+                  Status: Ready for TF-IDF / syntactic feature scoring
+                </div>
+              </div>
+
+              <!-- Engine 3: LLM Ollama Engine -->
+              <div
+                class="bg-surface-container-low rounded-xl p-3.5 shadow-sm flex flex-col gap-2 border border-surface-container-high/40">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-[18px]">psychology</span>
+                    <span class="text-xs font-semibold text-on-surface">LLM Ollama Semantic Reasoner (<span
+                        id="llmEngineName">phi3.5</span>)</span>
+                  </div>
+                  <div class="flex items-center gap-1 font-mono text-xs">
+                    <span class="text-outline">Score:</span>
+                    <span id="scoreLLM" class="text-on-surface font-bold">0/100</span>
+                  </div>
+                </div>
+                <div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+                  <div id="barLLM" class="bg-primary-container h-full rounded-full transition-all duration-500"
+                    style="width: 0%"></div>
+                </div>
+                <div id="detailsLLM" class="text-[11px] text-on-surface-variant font-mono truncate">
+                  Status: Model resident in memory
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 2: SAVED CALLS & TRANSCRIPTS (EVIDENCE VAULT)                     -->
+      <!-- ===================================================================== -->
+      <div id="tabCalls" class="tab-content space-y-4">
+
+        <!-- Top Filter & Search Bar -->
+        <div
+          class="flex flex-col md:flex-row items-center justify-between gap-3 bg-surface-container-low p-4 rounded-xl border border-surface-container-high/40 shadow-sm">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[20px]">folder_special</span>
+            <div>
+              <h2 class="text-sm font-bold text-on-surface">Forensic Evidence Vault</h2>
+              <p class="text-xs text-on-surface-variant"><span id="savedCallsSummary">0 Calls</span> recorded with audio
+                WAV telemetry and transcripts</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto flex-wrap">
+            <!-- Filter Pills -->
+            <div
+              class="flex items-center bg-surface-container-lowest p-1 rounded-lg gap-1 border border-surface-container-high/40 text-xs font-mono">
+              <button onclick="setCallFilter('all', this)"
+                class="call-filter-btn px-2.5 py-1 rounded bg-surface-container-high text-primary font-semibold">All</button>
+              <button onclick="setCallFilter('scam', this)"
+                class="call-filter-btn px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface">Scam
+                Only</button>
+              <button onclick="setCallFilter('legit', this)"
+                class="call-filter-btn px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface">Legitimate</button>
+            </div>
+
+            <!-- Search Input -->
+            <div class="relative flex items-center min-w-[220px]">
+              <span
+                class="material-symbols-outlined text-outline text-[16px] absolute left-2.5 pointer-events-none">search</span>
+              <input id="callsSearchInput" oninput="filterCallsList()" type="text"
+                placeholder="Search call ID or transcript..."
+                class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono pl-8 pr-3 py-1.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+            </div>
+
+            <button onclick="loadCalls()"
+              class="p-1.5 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg transition-colors"
+              title="Refresh calls list">
+              <span class="material-symbols-outlined text-[18px]">refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Master / Detail Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+
+          <!-- Left: Calls Table (6 cols) -->
+          <div
+            class="xl:col-span-6 bg-surface-container-low rounded-xl border border-surface-container-high/40 shadow-sm overflow-hidden flex flex-col">
+            <div
+              class="px-4 py-2.5 bg-surface-container flex items-center justify-between border-b border-surface-container-high/40">
+              <span class="text-xs font-bold text-on-surface uppercase tracking-wider font-mono">Call Manifest</span>
+              <span class="text-[11px] text-outline font-mono">Click row to inspect</span>
+            </div>
+
+            <div class="overflow-x-auto max-h-[580px] overflow-y-auto">
+              <table class="w-full text-left border-collapse text-xs font-mono">
+                <thead>
+                  <tr class="bg-surface-container-lowest text-outline border-b border-surface-container-high/40">
+                    <th class="py-2.5 px-3">CALL ID</th>
+                    <th class="py-2.5 px-3">TIME</th>
+                    <th class="py-2.5 px-3">DURATION</th>
+                    <th class="py-2.5 px-3">RISK</th>
+                    <th class="py-2.5 px-3">VERDICT</th>
+                    <th class="py-2.5 px-3 text-right">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="callsTableBody" class="divide-y divide-surface-container">
+                  <tr>
+                    <td colspan="6" class="py-8 text-center text-outline">Loading saved calls database...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Evidence Inspection Drawer (6 cols) -->
+          <div
+            class="xl:col-span-6 bg-surface-container-low rounded-xl border border-surface-container-high/40 shadow-sm p-4 flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3 pb-2 border-b border-surface-container-high/40">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span id="drawerCallId"
+                    class="font-mono text-xs font-bold text-primary bg-surface-container px-2 py-0.5 rounded">SELECT A
+                    CALL</span>
+                  <span id="drawerVerdictBadge"
+                    class="font-mono text-[10px] px-2 py-0.5 rounded bg-surface-container text-outline font-semibold">NO
+                    SELECTION</span>
+                </div>
+                <div id="drawerTime" class="text-xs text-on-surface-variant font-mono mt-1">Select any call from the
+                  manifest to review forensic audio and transcript details.</div>
+              </div>
+              <button id="drawerDeleteBtn" onclick="deleteSelectedCall()"
+                class="hidden px-2.5 py-1 bg-error-container text-on-error-container hover:bg-error hover:text-on-error rounded text-xs font-mono flex items-center gap-1 transition-colors">
+                <span class="material-symbols-outlined text-[14px]">delete</span>
+                <span>Delete</span>
+              </button>
+            </div>
+
+            <!-- Audio Player Card -->
+            <div id="drawerAudioSection"
+              class="hidden bg-surface-container p-3 rounded-lg flex flex-col gap-2 border border-surface-container-high/40">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="flex items-center gap-1.5 text-secondary font-semibold">
+                  <span class="material-symbols-outlined text-[16px]">volume_up</span>
+                  <span>Recorded Audio WAV Stream</span>
+                </span>
+                <a id="drawerDownloadAudioLink" href="#" download
+                  class="text-primary hover:underline flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">download</span>
+                  <span>Download WAV</span>
+                </a>
+              </div>
+              <audio id="drawerAudioElement" controls class="w-full h-8"></audio>
+            </div>
+
+            <!-- Cryptographic Audio Hash & Tamper-Proof Audit Card -->
+            <div id="drawerHashSection"
+              class="hidden bg-surface-container p-3 rounded-lg flex flex-col gap-2 border border-surface-container-high/40">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="flex items-center gap-1.5 text-primary font-semibold">
+                  <span class="material-symbols-outlined text-[16px]">verified_user</span>
+                  <span>Audio Cryptographic Hash (SHA-256)</span>
+                </span>
+                <span id="drawerHashTamperBadge"
+                  class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1">
+                  <span id="drawerHashBadgeIcon" class="material-symbols-outlined text-[12px]">check_circle</span>
+                  <span id="drawerHashBadgeText">Tamper-Free</span>
+                </span>
+              </div>
+
+              <div
+                class="flex items-center justify-between gap-2 bg-surface-container-lowest p-2 rounded border border-surface-container-high/50 font-mono text-[11px]">
+                <div class="flex items-center gap-1.5 overflow-hidden w-full">
+                  <span class="text-outline uppercase text-[10px] shrink-0 font-bold">SHA256:</span>
+                  <span id="drawerHashValue" class="text-on-surface font-mono text-[11px] truncate select-all"></span>
+                </div>
+                <button id="drawerCopyHashBtn" onclick="copyDrawerHash()"
+                  class="shrink-0 px-2.5 py-1 bg-surface-container hover:bg-surface-container-high rounded text-primary hover:text-on-surface transition-colors flex items-center gap-1 text-[11px] border border-surface-container-high font-mono cursor-pointer"
+                  title="Copy full SHA-256 hash to clipboard">
+                  <span id="drawerCopyHashIcon" class="material-symbols-outlined text-[13px]">content_copy</span>
+                  <span id="drawerCopyHashText">Copy</span>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between text-[10px] font-mono text-outline pt-0.5">
+                <span id="drawerHashDetailText" class="flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[13px] text-secondary">verified</span>
+                  <span>File integrity verified: No tampering detected since recording.</span>
+                </span>
+                <button onclick="verifyDrawerHash()"
+                  class="text-primary hover:underline flex items-center gap-0.5 cursor-pointer shrink-0 ml-2"
+                  title="Recompute and verify hash against file on disk">
+                  <span class="material-symbols-outlined text-[12px]">sync</span>
+                  <span>Verify File</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Forensic Summary -->
+            <div id="drawerReasonSection" class="hidden flex flex-col gap-1">
+              <span class="text-[11px] font-mono text-outline uppercase">Forensic Summary & Detection Flags</span>
+              <p id="drawerReasonText"
+                class="text-xs text-on-surface bg-surface-container/60 p-2.5 rounded-lg border border-surface-container-high/30">
+              </p>
+              <div id="drawerFlagsContainer" class="flex flex-wrap gap-1 mt-1"></div>
+            </div>
+
+            <!-- Full Transcript Section -->
+            <div id="drawerTranscriptSection" class="hidden flex flex-col gap-1">
+              <span class="text-[11px] font-mono text-outline uppercase">Full Reconstructed Transcript</span>
+              <div id="drawerTranscriptText"
+                class="bg-surface-container-lowest p-3 rounded-lg font-mono text-xs text-on-surface leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap border border-surface-container-high/30">
+              </div>
+            </div>
+
+            <!-- Segments Timeline -->
+            <div id="drawerSegmentsSection" class="hidden flex flex-col gap-1">
+              <span class="text-[11px] font-mono text-outline uppercase">Segment Timeline Analysis</span>
+              <div id="drawerSegmentsList" class="flex flex-col gap-1 max-h-48 overflow-y-auto font-mono text-xs"></div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB: SMS THREAT MONITOR (ANDROID SYNCED INCOMING MESSAGES)             -->
+      <!-- ===================================================================== -->
+      <div id="tabSms" class="tab-content space-y-4">
+
+        <!-- Top Telemetry Action Strip -->
+        <div
+          class="flex flex-col md:flex-row items-center justify-between gap-3 bg-surface-container-low p-4 rounded-xl border border-surface-container-high/40 shadow-sm">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined text-primary text-[24px]">mark_chat_unread</span>
+              <div>
+                <h2 class="text-sm font-bold text-on-surface">Android SMS Threat Stream</h2>
+                <p class="text-xs text-on-surface-variant"><span id="smsSummaryCount">0 Messages</span> received from
+                  Android phone</p>
+              </div>
+            </div>
+            <!-- Live Status Counters -->
+            <div class="flex items-center gap-2 font-mono text-xs">
+              <span
+                class="px-2.5 py-1 rounded-lg bg-surface-container text-on-surface-variant border border-outline-variant/20">
+                Total: <strong id="metricSmsTotal" class="text-on-surface">0</strong>
+              </span>
+              <span class="px-2.5 py-1 rounded-lg bg-error-container/20 text-error border border-error/30">
+                Threats: <strong id="metricSmsThreats" class="font-bold">0</strong>
+              </span>
+              <span class="px-2.5 py-1 rounded-lg bg-surface-container text-secondary border border-outline-variant/20">
+                Safe: <strong id="metricSmsSafe" class="font-bold">0</strong>
+              </span>
+            </div>
+          </div>
+
+          <!-- Controls: Search, Filter, Refresh, Clear -->
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end flex-wrap">
+            <input id="smsSearchInput" oninput="filterSmsList()" type="text" placeholder="Search by sender or text..."
+              class="px-3 py-1.5 bg-surface-container rounded-lg border border-outline-variant/30 text-xs font-mono text-on-surface focus:outline-none focus:border-primary w-48 md:w-60" />
+            <select id="smsFilterSelect" onchange="filterSmsList()"
+              class="px-2.5 py-1.5 bg-surface-container rounded-lg border border-outline-variant/30 text-xs font-mono text-on-surface focus:outline-none">
+              <option value="all">All SMS</option>
+              <option value="threats">Threats Only</option>
+              <option value="safe">Safe Only</option>
+            </select>
+            <button onclick="simulateDashboardSms()"
+              class="flex items-center gap-1 px-3 py-1.5 bg-secondary/15 hover:bg-secondary/25 text-secondary rounded-lg text-xs font-mono border border-secondary/30 transition-colors"
+              title="Simulate a test SMS message">
+              <span class="material-symbols-outlined text-[15px]">send_to_mobile</span>
+              <span>Simulate SMS</span>
+            </button>
+            <button onclick="loadSmsRecords()"
+              class="flex items-center gap-1 px-3 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-xs font-mono text-on-surface border border-outline-variant/30 transition-colors"
+              title="Refresh received SMS">
+              <span class="material-symbols-outlined text-[15px]">refresh</span>
+              <span>Refresh</span>
+            </button>
+            <button onclick="clearAllSmsRecords()"
+              class="flex items-center gap-1 px-3 py-1.5 bg-error-container/20 hover:bg-error-container/40 text-error rounded-lg text-xs font-mono border border-error/30 transition-colors"
+              title="Clear all received SMS records">
+              <span class="material-symbols-outlined text-[15px]">delete_sweep</span>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SMS Message Cards Grid -->
+        <div id="smsListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="col-span-full text-center py-12 text-outline font-mono text-xs">
+            <span class="material-symbols-outlined text-[36px] text-outline/50 mb-2 block mx-auto">sms</span>
+            No SMS messages received from Android yet.<br />
+            Incoming phone SMS will be automatically forwarded here for multi-engine fraud analysis.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SMS Detail Modal -->
+      <div id="smsDetailModal"
+        class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+          class="bg-surface-container-low border border-surface-container-high rounded-2xl max-w-xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
+          <div class="flex items-start justify-between border-b border-surface-container-high pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="modalSmsSenderBadge" class="text-xs px-2 py-0.5 rounded font-mono font-bold"></span>
+                <span id="modalSmsScoreBadge" class="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold"></span>
+              </div>
+              <p id="modalSmsTimestamp" class="text-[11px] font-mono text-outline mt-1"></p>
+            </div>
+            <button onclick="closeSmsModal()"
+              class="text-outline hover:text-on-surface p-1 rounded-lg hover:bg-surface-container">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <!-- Message Body -->
+          <div>
+            <span class="text-[11px] font-mono text-outline uppercase font-semibold">Message Text</span>
+            <div id="modalSmsBody"
+              class="mt-1 p-3.5 rounded-xl bg-surface-container-lowest font-mono text-xs text-on-surface leading-relaxed border border-surface-container-high/40 whitespace-pre-wrap">
+            </div>
+          </div>
+
+          <!-- Threat Breakdown -->
+          <div>
+            <span class="text-[11px] font-mono text-outline uppercase font-semibold">Multi-Engine Threat Analysis</span>
+            <div id="modalSmsReason"
+              class="mt-1 p-3 rounded-lg bg-surface-container font-mono text-xs text-on-surface leading-relaxed"></div>
+            <div id="modalSmsFlags" class="mt-2 flex flex-wrap gap-1"></div>
+          </div>
+
+          <!-- Engine Scores -->
+          <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+            <div class="p-2.5 rounded-lg bg-surface-container flex flex-col items-center">
+              <span class="text-outline text-[10px]">Rule-Based</span>
+              <span id="modalSmsRbScore" class="font-bold text-on-surface mt-0.5">0/100</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-surface-container flex flex-col items-center">
+              <span class="text-outline text-[10px]">XGBoost</span>
+              <span id="modalSmsXgScore" class="font-bold text-on-surface mt-0.5">0/100</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-surface-container flex flex-col items-center">
+              <span class="text-outline text-[10px]">LLM Deep Intent</span>
+              <span id="modalSmsLlmScore" class="font-bold text-on-surface mt-0.5">0/100</span>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2 border-t border-surface-container-high">
+            <button onclick="closeSmsModal()"
+              class="px-4 py-1.5 rounded-lg bg-primary text-on-primary font-mono text-xs font-semibold hover:opacity-90">Close</button>
+          </div>
+        </div>
+      </div>
+      <div id="tabSim" class="tab-content space-y-4">
+
+        <!-- Header Strip -->
+        <div
+          class="flex flex-wrap items-center justify-between gap-3 bg-surface-container-low px-4 py-3 rounded-xl border border-surface-container-high/40 shadow-sm">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-primary text-[22px]">science</span>
+            <div>
+              <h2 class="text-sm font-bold text-on-surface uppercase tracking-wide">Threat Simulation Sandbox</h2>
+              <p class="text-xs text-on-surface-variant">Inject synthesized voice and smishing attack vectors directly
+                into the live multi-engine pipeline.</p>
+            </div>
+          </div>
+          <span
+            class="font-mono text-xs text-secondary bg-surface-container px-2.5 py-1 rounded-full border border-secondary/20">PIPELINE
+            HOT & ACTIVE</span>
+        </div>
+
+        <!-- 2-Column Split: Audio Sandbox & SMS Sandbox -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+
+          <!-- Section 1: Audio Threat Simulation Sandbox -->
+          <div
+            class="bg-surface-container-low rounded-xl border border-surface-container-high/40 shadow-sm p-4 flex flex-col gap-4">
+            <div class="flex items-center justify-between pb-2 border-b border-surface-container-high/40">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]">graphic_eq</span>
+                <span class="text-sm font-bold text-on-surface">Audio Call Simulation</span>
+              </div>
+              <span class="font-mono text-[11px] text-secondary bg-surface-container px-2 py-0.5 rounded">WHISPER STT +
+                ENSEMBLE</span>
+            </div>
+
+            <!-- Quick Preset Buttons -->
+            <div class="space-y-1.5">
+              <span class="text-xs font-mono text-outline uppercase">1-Click Test Presets:</span>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button onclick="runSampleTest('scam_sample')"
+                  class="flex items-center justify-between p-2.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-left transition-colors border border-surface-container-high/40">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined text-error text-[20px]">warning</span>
+                    <div class="truncate">
+                      <p class="text-xs font-semibold text-on-surface truncate">Scam Call Sample</p>
+                      <p class="text-[10px] text-outline font-mono truncate">Urgent Arrest / Police Imposter</p>
+                    </div>
+                  </div>
+                  <span class="material-symbols-outlined text-[18px] text-outline">play_arrow</span>
+                </button>
+
+                <button onclick="runSampleTest('normal_sample')"
+                  class="flex items-center justify-between p-2.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-left transition-colors border border-surface-container-high/40">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined text-secondary text-[20px]">verified</span>
+                    <div class="truncate">
+                      <p class="text-xs font-semibold text-on-surface truncate">Normal Call Sample</p>
+                      <p class="text-[10px] text-outline font-mono truncate">Routine IT Support Help</p>
+                    </div>
+                  </div>
+                  <span class="material-symbols-outlined text-[18px] text-outline">play_arrow</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Custom File Upload Dropzone -->
+            <div class="space-y-1.5">
+              <span class="text-xs font-mono text-outline uppercase">Custom Audio File Upload:</span>
+              <div class="flex items-center gap-2">
+                <input id="simAudioFileInput" type="file" accept="audio/*,.wav,.mp3"
+                  class="w-full bg-surface-container-lowest text-xs text-on-surface p-2 rounded-lg border border-surface-container-high/60 file:mr-3 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-mono file:bg-primary file:text-on-primary hover:file:bg-primary-container cursor-pointer">
+              </div>
+            </div>
+
+            <!-- Controls: Update Live Monitor & Submit -->
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input id="cbUpdateLive" type="checkbox" checked
+                  class="w-4 h-4 rounded bg-surface-container accent-primary">
+                <span class="text-xs text-on-surface-variant">Update Live Monitor & save to evidence</span>
+              </label>
+
+              <button id="btnRunCustomAudio" onclick="uploadAndTestAudio()"
+                class="px-4 py-2 bg-primary text-on-primary hover:bg-primary-container rounded-lg font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                <span>Run Audio Simulation</span>
+              </button>
+            </div>
+
+            <!-- Outcome Box -->
+            <div id="simAudioOutcome"
+              class="hidden bg-surface-container-lowest p-3.5 rounded-xl border border-surface-container-high/50 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-mono uppercase text-outline">Simulation Result</span>
+                <span id="simAudioVerdict" class="font-mono text-xs px-2 py-0.5 rounded font-bold"></span>
+              </div>
+              <p id="simAudioTranscript"
+                class="text-xs text-on-surface bg-surface-container-low p-2.5 rounded border border-surface-container-high/40 leading-relaxed font-mono">
+              </p>
+              <div
+                class="flex items-center justify-between text-xs font-mono text-on-surface-variant pt-1 border-t border-surface-container-high/40">
+                <span>Score: <strong id="simAudioScore" class="text-on-surface"></strong></span>
+                <span id="simAudioLatency" class="text-outline"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: SMS / Smishing Simulation Sandbox -->
+          <div
+            class="bg-surface-container-low rounded-xl border border-surface-container-high/40 shadow-sm p-4 flex flex-col gap-4">
+            <div class="flex items-center justify-between pb-2 border-b border-surface-container-high/40">
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]">sms</span>
+                <span class="text-sm font-bold text-on-surface">SMS / Smishing Simulation</span>
+              </div>
+              <span class="font-mono text-[11px] text-primary bg-surface-container px-2 py-0.5 rounded">HEURISTICS +
+                LLM</span>
+            </div>
+
+            <!-- Sender Type Selector -->
+            <div class="space-y-1.5">
+              <span class="text-xs font-mono text-outline uppercase">Sender Vector Type:</span>
+              <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                <label
+                  class="flex items-center justify-center p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-high/40 cursor-pointer select-none">
+                  <input type="radio" name="smsSenderType" value="dlt_registered" class="mr-1.5 accent-primary">
+                  <span>DLT Bank ID</span>
+                </label>
+                <label
+                  class="flex items-center justify-center p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-high/40 cursor-pointer select-none">
+                  <input type="radio" name="smsSenderType" value="plain_number" class="mr-1.5 accent-primary">
+                  <span>Plain Phone #</span>
+                </label>
+                <label
+                  class="flex items-center justify-center p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-surface-container-high/40 cursor-pointer select-none">
+                  <input type="radio" name="smsSenderType" value="unknown" checked class="mr-1.5 accent-primary">
+                  <span>Unknown</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Template Quick Ingestion -->
+            <div class="space-y-1.5">
+              <span class="text-xs font-mono text-outline uppercase">Template Quick-Fills:</span>
+              <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                <button onclick="fillSmsTemplate('kyc')"
+                  class="p-2 rounded bg-surface-container hover:bg-surface-container-high text-left truncate transition-colors border border-surface-container-high/40">
+                  ⚠️ Bank KYC Suspension
+                </button>
+                <button onclick="fillSmsTemplate('package')"
+                  class="p-2 rounded bg-surface-container hover:bg-surface-container-high text-left truncate transition-colors border border-surface-container-high/40">
+                  📦 Package Redelivery
+                </button>
+                <button onclick="fillSmsTemplate('lottery')"
+                  class="p-2 rounded bg-surface-container hover:bg-surface-container-high text-left truncate transition-colors border border-surface-container-high/40">
+                  🎁 Lottery Prize
+                </button>
+                <button onclick="fillSmsTemplate('otp')"
+                  class="p-2 rounded bg-surface-container hover:bg-surface-container-high text-left truncate transition-colors border border-surface-container-high/40">
+                  ✅ Legitimate 2FA OTP
+                </button>
+              </div>
+            </div>
+
+            <!-- Message Textarea -->
+            <div class="space-y-1">
+              <div class="flex justify-between items-center text-xs font-mono">
+                <span class="text-outline uppercase">Message Payload:</span>
+                <span id="smsCharCounter" class="text-outline">0 Chars</span>
+              </div>
+              <textarea id="smsBodyInput" oninput="updateSmsCharCount()" rows="3"
+                class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary resize-none leading-relaxed"
+                placeholder="Type SMS body or choose a preset..."></textarea>
+            </div>
+
+            <!-- Action -->
+            <div class="flex justify-end">
+              <button id="btnRunSms" onclick="runSmsScan()"
+                class="px-4 py-2 bg-primary text-on-primary hover:bg-primary-container rounded-lg font-mono text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">security_update_warning</span>
+                <span>Run SMS Scan</span>
+              </button>
+            </div>
+
+            <!-- SMS Outcome Box -->
+            <div id="smsOutcome"
+              class="hidden bg-surface-container-lowest p-3.5 rounded-xl border border-surface-container-high/50 space-y-2 font-mono">
+              <div class="flex items-center justify-between">
+                <span id="smsScoreBadge" class="text-xs font-bold text-on-surface"></span>
+                <span id="smsVerdictBadge" class="text-xs px-2 py-0.5 rounded font-bold"></span>
+              </div>
+              <p id="smsReasonText"
+                class="text-xs text-on-surface bg-surface-container-low p-2 rounded border border-surface-container-high/40">
+              </p>
+              <div id="smsFlagsContainer" class="flex flex-wrap gap-1"></div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Real-Time Sandbox Execution Log -->
+        <div
+          class="bg-surface-container-low rounded-xl border border-surface-container-high/40 p-3.5 shadow-sm space-y-1.5 font-mono text-xs">
+          <div class="flex items-center justify-between text-outline pb-1 border-b border-surface-container-high/30">
+            <span class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[15px] text-primary">terminal</span>
+              <span>Simulation Execution Log Buffer</span>
+            </span>
+            <span class="text-[10px]">Real-time daemon</span>
+          </div>
+          <div id="simLogFeed" class="space-y-1 text-on-surface-variant max-h-32 overflow-y-auto">
+            <p><span class="text-outline">[READY]</span> Threat Simulation Sandbox initialized and connected to server
+              APIs.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 4: SERVER CLI OPTIONS & ENGINE TUNING                             -->
+      <!-- ===================================================================== -->
+      <div id="tabConfig" class="tab-content space-y-4">
+
+        <!-- Save Toast Banner -->
+        <div id="configSaveToast"
+          class="hidden w-full rounded-xl bg-surface-container-high p-3 flex items-center justify-between shadow-lg border border-secondary/30 transition-all font-mono text-xs">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+            <span class="text-on-surface font-medium">Configuration saved and applied — survives server restarts.</span>
+          </div>
+          <button onclick="document.getElementById('configSaveToast').classList.add('hidden')"
+            class="text-outline hover:text-on-surface">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+          </button>
+        </div>
+
+        <!-- Configuration Card -->
+        <div
+          class="bg-surface-container-low rounded-xl border border-surface-container-high/40 shadow-sm p-5 space-y-5">
+          <div class="flex items-center gap-3 pb-3 border-b border-surface-container-high/40">
+            <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+              <span class="material-symbols-outlined text-[20px]">tune</span>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-on-surface">Server CLI Runtime Parameters & Engine Tuning</h2>
+              <p class="text-xs text-on-surface-variant font-mono">Apply settings without restarting Docker. Saved
+                settings survive server restarts and Docker container recreation via persistent data; no .env edits
+                needed.</p>
+            </div>
+          </div>
+
+          <form onsubmit="saveConfig(event)" class="space-y-4">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Detection Mode Selector -->
+              <div class="space-y-1.5 md:col-span-2">
+                <label class="text-xs font-mono text-on-surface font-semibold flex items-center gap-1" for="cfgMode">
+                  <span>DETECTION ENSEMBLE MODE:</span>
+                </label>
+                <select id="cfgMode" onchange="quickUpdateConfig({ mode: this.value })"
+                  class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                  <option value="all">ALL (Ensemble: Rule-Based + XGBoost + LLM Reasoning) [Recommended Default]
+                  </option>
+                  <option value="llm_only">LLM Only (Ollama Direct Telemetry Stream)</option>
+                  <option value="xgboost_only">XGBoost ML Only (Sub-5ms High-Throughput)</option>
+                  <option value="rulebased_only">Rule-Based Only (Deterministic Heuristic Matrix)</option>
+                </select>
+                <p class="text-[11px] text-outline font-mono">Ensemble cross-checks heuristic keywords, gradient-boosted
+                  trees, and semantic LLM intent for maximum defense accuracy.</p>
+              </div>
+
+              <!-- STT Provider & Multi-Engine Configuration Panel -->
+              <div
+                class="space-y-2 md:col-span-2 bg-surface-container/40 p-4 rounded-xl border border-surface-container-high/60">
+                <div class="flex items-center justify-between pb-2.5 border-b border-surface-container-high/40">
+                  <label class="text-xs font-mono text-on-surface font-semibold flex items-center gap-2"
+                    for="cfgSttProvider">
+                    <span class="material-symbols-outlined text-[18px] text-primary">graphic_eq</span>
+                    <span>SPEECH-TO-TEXT (STT) ENGINE PROVIDER:</span>
+                  </label>
+                  <span id="sttProviderBadge"
+                    class="font-mono text-[10px] px-2 py-0.5 rounded font-bold bg-primary/15 text-primary border border-primary/20 uppercase tracking-wide">ACTIVE:
+                    WHISPER</span>
+                </div>
+
+                <div class="pt-1">
+                  <select id="cfgSttProvider" onchange="onSttProviderChange(true)"
+                    class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                    <option value="parakeet" selected>NVIDIA NeMo Parakeet-CTC 0.6B (FastConformer CTC, &lt;150ms, Zero
+                      Hallucination) [Recommended]</option>
+                    <option value="nemotron">NVIDIA Nemotron Speech (Local NeMo In-Process / CUDA GPU) [Offline /
+                      Private]</option>
+                    <option value="whisper">Faster-Whisper (Local CUDA GPU / CPU Fallback) [Offline / Private]</option>
+                    <option value="sarvam">Sarvam AI Speech-to-Text (Online API: saaras:v4 / saaras:v3) [Indic +
+                      English]</option>
+                  </select>
+                  <p class="text-[11px] text-outline font-mono mt-1">Select the active Automatic Speech Recognition
+                    provider for live telephone streams, simulator uploads, and forensic analysis.</p>
+                </div>
+
+                <!-- Sub-Panel: Whisper Settings -->
+                <div id="panelWhisperOptions"
+                  class="mt-3 pt-3 border-t border-surface-container-high/30 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgWhisper">WHISPER MODEL
+                      SIZE:</label>
+                    <select id="cfgWhisper" onchange="quickUpdateConfig({ whisper_model: this.value })"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                      <option value="small">small (Fast inference &lt;20ms)</option>
+                      <option value="medium" selected>medium (High accuracy) [Default]</option>
+                      <option value="large-v3">large-v3 (Maximum accuracy & diarization)</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold">HARDWARE ACCELERATOR:</label>
+                    <div
+                      class="w-full bg-surface-container-lowest text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-secondary font-semibold">
+                        <span class="material-symbols-outlined text-[15px]">memory</span>
+                        <span id="cfgDeviceDisplay">CUDA GPU (NVIDIA Container Toolkit)</span>
+                      </span>
+                      <span class="text-outline text-[10px]">FP16 Enabled</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sub-Panel: NVIDIA NeMo Local ASR Settings -->
+                <div id="panelNemotronOptions"
+                  class="hidden mt-3 pt-3 border-t border-surface-container-high/30 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgNvModel">NVIDIA NEMO
+                      MODEL:</label>
+                    <select id="cfgNvModel" onchange="quickUpdateConfig({ nvidia_asr_model: this.value })"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                      <option value="nvidia/parakeet-ctc-0.6b" selected>nvidia/parakeet-ctc-0.6b (FastConformer-CTC 0.6B
+                        - Zero Hallucination)</option>
+                      <option value="nvidia/nemotron-speech-streaming-en-0.6b">nvidia/nemotron-speech-streaming-en-0.6b
+                        (Streaming Conformer 0.6B)</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold">EXECUTION ENGINE:</label>
+                    <div
+                      class="w-full bg-surface-container-lowest text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-secondary font-semibold">
+                        <span class="material-symbols-outlined text-[15px]">developer_board</span>
+                        <span>Local NeMo Toolkit (In-Process)</span>
+                      </span>
+                      <span class="text-outline text-[10px]">Zero External API</span>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold">FAIL-SAFE FALLBACK:</label>
+                    <div
+                      class="w-full bg-surface-container-lowest text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 flex items-center justify-between">
+                      <span class="flex items-center gap-1.5 text-on-surface font-mono">
+                        <span class="material-symbols-outlined text-[15px] text-primary">security</span>
+                        <span>Faster-Whisper Auto-Fallback</span>
+                      </span>
+                      <span class="text-secondary text-[10px] font-bold">100% Uptime</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sub-Panel: Sarvam AI Settings -->
+                <div id="panelSarvamOptions"
+                  class="hidden mt-3 pt-3 border-t border-surface-container-high/30 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgSarvamModel">SARVAM
+                      MODEL:</label>
+                    <select id="cfgSarvamModel" onchange="quickUpdateConfig({ sarvam_model: this.value })"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                      <option value="saaras:v4" selected>saaras:v4 (22 Indic Languages + English)</option>
+                      <option value="saaras:v3">saaras:v3 (Predecessor Model)</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgSarvamMode">OUTPUT
+                      MODE:</label>
+                    <select id="cfgSarvamMode" onchange="quickUpdateConfig({ sarvam_mode: this.value })"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                      <option value="transcribe" selected>transcribe (Standard)</option>
+                      <option value="translate">translate (Translate to English)</option>
+                      <option value="verbatim">verbatim (Word-for-Word)</option>
+                      <option value="codemix">codemix (Hinglish / Code-mixed)</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgSarvamLang">LANGUAGE
+                      CODE:</label>
+                    <select id="cfgSarvamLang" onchange="quickUpdateConfig({ sarvam_language: this.value })"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                      <option value="auto" selected>auto (Automatic Detection)</option>
+                      <option value="en-IN">en-IN (Indian English)</option>
+                      <option value="hi-IN">hi-IN (Hindi)</option>
+                      <option value="ta-IN">ta-IN (Tamil)</option>
+                      <option value="te-IN">te-IN (Telugu)</option>
+                      <option value="kn-IN">kn-IN (Kannada)</option>
+                      <option value="mr-IN">mr-IN (Marathi)</option>
+                      <option value="bn-IN">bn-IN (Bengali)</option>
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between">
+                      <label class="text-[11px] font-mono text-on-surface font-semibold" for="cfgSarvamApiKey">SARVAM
+                        API KEY:</label>
+                      <span id="badgeSarvamKeyStatus" class="text-[10px] font-mono text-secondary font-bold">✔ Loaded
+                        (.env)</span>
+                    </div>
+                    <input id="cfgSarvamApiKey" type="password" placeholder="sk_... (leave blank to keep current)"
+                      class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ollama Host Endpoint -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-mono text-on-surface font-semibold" for="cfgOllamaHost">OLLAMA HOST (API
+                  ENDPOINT):</label>
+                <input id="cfgOllamaHost" type="text" value="host.docker.internal"
+                  placeholder="localhost or host.docker.internal"
+                  class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                <p class="text-[11px] text-outline font-mono">Use 'host.docker.internal' when running inside Docker on
+                  Windows/Mac, or 'localhost' on bare-metal Linux.</p>
+              </div>
+
+              <!-- Ollama Model Name -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-mono text-on-surface font-semibold" for="cfgOllamaModel">OLLAMA MODEL
+                  NAME:</label>
+                <input id="cfgOllamaModel" type="text" value="phi3.5" placeholder="e.g. phi3.5, phi4-mini"
+                  class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary">
+                <p class="text-[11px] text-outline font-mono">Local model resident in Ollama service for JSON-formatted
+                  reasoning classification.</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-mono text-on-surface font-semibold" for="cfgAudioPrompt">AUDIO LLM SYSTEM
+                  PROMPT:</label>
+                <textarea id="cfgAudioPrompt" rows="5" maxlength="16000"
+                  placeholder="Leave blank to use the built-in scam-call prompt"
+                  class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary"></textarea>
+                <p class="text-[11px] text-outline font-mono">Controls call-risk reasoning only. JSON output
+                  requirements should be retained.</p>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="text-xs font-mono text-on-surface font-semibold" for="cfgSmsPrompt">SMS LLM SYSTEM
+                  PROMPT:</label>
+                <textarea id="cfgSmsPrompt" rows="5" maxlength="16000"
+                  placeholder="Leave blank to use the built-in smishing prompt"
+                  class="w-full bg-surface-container-lowest text-on-surface text-xs font-mono p-2.5 rounded-lg border border-surface-container-high/60 focus:outline-none focus:border-primary"></textarea>
+                <p class="text-[11px] text-outline font-mono">Controls SMS/smishing reasoning separately from audio
+                  calls.</p>
+              </div>
+            </div>
+
+            <!-- Save Action Button -->
+            <div class="flex items-center justify-between pt-3 border-t border-surface-container-high/40">
+              <span id="configSaveStatus" class="text-xs font-mono text-outline"></span>
+              <button id="btnSaveConfig" type="submit"
+                class="px-5 py-2.5 bg-primary text-on-primary hover:bg-primary-container rounded-lg font-mono text-xs font-semibold flex items-center gap-2 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">save</span>
+                <span>Save & Apply Configuration</span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- FRONTEND JAVASCRIPT CONTROLLER                                           -->
+  <!-- ========================================================================= -->
+  <script>
+    var activeTabId = 'tabLive';
+    var cachedCalls = [];
+    var currentCallFilter = 'all';
+    var selectedCallId = null;
+
+    // -------------------------------------------------------------------------
+    // Tab Navigation
+    // -------------------------------------------------------------------------
+    function switchTab(tabId, btn) {
+      activeTabId = tabId;
+      document.querySelectorAll('.nav-tab').forEach(function (b) {
+        b.className = 'nav-tab px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all text-on-surface-variant hover:text-on-surface hover:bg-surface-container flex items-center gap-1.5';
+      });
+      document.querySelectorAll('.tab-content').forEach(function (c) {
+        c.classList.remove('active');
+      });
+
+      if (btn) {
+        btn.className = 'nav-tab active px-3.5 py-1.5 rounded-lg font-medium text-xs transition-all bg-surface-container-high text-primary font-semibold shadow-sm flex items-center gap-1.5';
+      }
+      var target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+
+      if (tabId === 'tabCalls') {
+        loadCalls();
+      } else if (tabId === 'tabConfig') {
+        syncConfigFromStatus();
+      } else if (tabId === 'tabSms') {
+        loadSmsRecords();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // System Status Polling (/api/status)
+    // -------------------------------------------------------------------------
+    async function fetchStatus() {
+      if (document.hidden) return;
+      try {
+        var res = await fetch('/api/status');
+        var d = await res.json();
+
+        // Server Health
+        document.getElementById('srvStatusText').textContent = (d.status || 'ONLINE').toUpperCase();
+        document.getElementById('srvStatusPulse').className = 'w-2 h-2 rounded-full bg-secondary animate-pulse';
+
+        // Model Readiness Status Badge (Hot / Loading)
+        var msBadge = document.getElementById('modelStatusBadge');
+        var msText = document.getElementById('modelStatusText');
+        var msPulse = document.getElementById('modelStatusPulse');
+        if (msBadge && msText && msPulse) {
+          var modelError = d.model_error || ((d.stt_status || '').indexOf('error:') === 0 ? d.stt_status : '');
+          if (d.model_status === 'hot') {
+            msPulse.className = 'w-2 h-2 rounded-full bg-error animate-pulse';
+            msText.textContent = '🔥 Model: Hot';
+            msText.className = 'text-error font-medium';
+            msBadge.title = 'STT: ' + (d.stt_status || 'hot') + ' (' + (d.device || 'gpu') + ') | LLM: ' + (d.llm_status || 'standby');
+          } else if (d.model_status === 'error' || modelError) {
+            msPulse.className = 'w-2 h-2 rounded-full bg-error';
+            msText.textContent = 'Model: Error';
+            msText.className = 'text-error font-medium';
+            msBadge.title = modelError || 'Selected local model failed to load';
+          } else {
+            msPulse.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+            msText.textContent = '⏳ Model: Loading...';
+            msText.className = 'text-amber-400 font-medium';
+            msBadge.title = 'Loading STT/LLM models into memory...';
+          }
+        }
+
+        // Telemetry Chips
+        document.getElementById('lblMode').textContent = (d.detection_mode || 'ALL').toUpperCase();
+
+        // Dynamic STT Provider Badge & Label
+        var prov = (d.stt_provider || 'parakeet').toLowerCase();
+        var lblSTT = document.getElementById('lblSTT');
+        var termStt = document.getElementById('termSttInfo');
+        var termBadge = document.getElementById('termSttBadge');
+        var liveProvBadge = document.getElementById('liveProviderBadge');
+        var liveProvDot = document.getElementById('liveProviderDot');
+        var hdrSttDot = document.getElementById('hdrSttDot');
+
+        if (prov === 'parakeet') {
+          if (lblSTT) { lblSTT.textContent = 'Parakeet-CTC 0.6B'; lblSTT.className = 'text-secondary font-medium'; }
+          if (hdrSttDot) hdrSttDot.className = 'w-1.5 h-1.5 rounded-full bg-secondary';
+          if (termStt) termStt.textContent = 'STT: NVIDIA NeMo Parakeet-CTC 0.6B (FastConformer CTC, Zero Hallucination)';
+          if (termBadge) termBadge.textContent = 'parakeet-ctc 0.6b (local cuda)';
+          if (liveProvBadge) { liveProvBadge.textContent = 'PARAKEET-CTC 0.6B'; liveProvBadge.className = 'text-secondary font-bold text-xs uppercase font-mono'; }
+          if (liveProvDot) liveProvDot.className = 'w-1.5 h-1.5 rounded-full bg-secondary';
+        } else if (prov === 'sarvam') {
+          if (lblSTT) { lblSTT.textContent = 'Sarvam Realtime (' + (d.sarvam_model || 'saaras:v4') + ')'; lblSTT.className = 'text-primary font-medium'; }
+          if (hdrSttDot) hdrSttDot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+          if (termStt) termStt.textContent = 'STT: Sarvam AI Realtime WS ' + (d.sarvam_model || 'saaras:v4') + ' (' + (d.sarvam_language || 'auto') + ')';
+          if (termBadge) termBadge.textContent = 'sarvam realtime ws (saaras:v4)';
+          if (liveProvBadge) { liveProvBadge.textContent = 'SARVAM REALTIME WS'; liveProvBadge.className = 'text-primary font-bold text-xs uppercase font-mono'; }
+          if (liveProvDot) liveProvDot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+        } else if (prov === 'nemotron') {
+          if (lblSTT) { lblSTT.textContent = 'Nemotron Local'; lblSTT.className = 'text-secondary font-medium'; }
+          if (hdrSttDot) hdrSttDot.className = 'w-1.5 h-1.5 rounded-full bg-secondary';
+          if (termStt) termStt.textContent = 'STT: NVIDIA Nemotron Speech 0.6B (Local NeMo GPU)';
+          if (termBadge) termBadge.textContent = 'nemotron-speech 0.6b';
+          if (liveProvBadge) { liveProvBadge.textContent = 'NVIDIA NEMOTRON'; liveProvBadge.className = 'text-secondary font-bold text-xs uppercase font-mono'; }
+          if (liveProvDot) liveProvDot.className = 'w-1.5 h-1.5 rounded-full bg-secondary';
+        } else {
+          if (lblSTT) { lblSTT.textContent = 'Whisper (' + (d.whisper_model || 'medium') + ')'; lblSTT.className = 'text-primary font-medium'; }
+          if (hdrSttDot) hdrSttDot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+          if (termStt) termStt.textContent = 'STT: Faster-Whisper ' + (d.whisper_model || 'medium') + ' on ' + (d.device || 'cuda').toUpperCase();
+          if (termBadge) termBadge.textContent = 'faster-whisper (' + (d.whisper_model || 'medium') + ')';
+          if (liveProvBadge) { liveProvBadge.textContent = 'FASTER-WHISPER'; liveProvBadge.className = 'text-primary font-bold text-xs uppercase font-mono'; }
+          if (liveProvDot) liveProvDot.className = 'w-1.5 h-1.5 rounded-full bg-primary';
+        }
+
+        document.getElementById('lblDevice').textContent = (d.device || 'CUDA').toUpperCase();
+        document.getElementById('cfgDeviceDisplay').textContent = (d.device === 'cuda' ? 'CUDA GPU (NVIDIA Container Toolkit)' : 'CPU Mode (int8)');
+
+        // Sarvam & NVIDIA API Key Status Badges in Tab 4
+        if (document.getElementById('badgeSarvamKeyStatus')) {
+          if (d.sarvam_configured) {
+            document.getElementById('badgeSarvamKeyStatus').textContent = '✔ Loaded (' + (d.sarvam_key_hint || '.env') + ')';
+            document.getElementById('badgeSarvamKeyStatus').className = 'text-[10px] font-mono text-secondary font-bold';
+          } else {
+            document.getElementById('badgeSarvamKeyStatus').textContent = '⚠ Not set';
+            document.getElementById('badgeSarvamKeyStatus').className = 'text-[10px] font-mono text-amber-400 font-bold';
+          }
+        }
+        if (document.getElementById('badgeNvKeyStatus')) {
+          if (d.nvidia_configured) {
+            document.getElementById('badgeNvKeyStatus').textContent = '✔ Key Configured';
+            document.getElementById('badgeNvKeyStatus').className = 'text-[10px] font-mono text-secondary font-bold';
+          } else {
+            document.getElementById('badgeNvKeyStatus').textContent = 'Optional for local NIM';
+            document.getElementById('badgeNvKeyStatus').className = 'text-[10px] font-mono text-outline';
+          }
+        }
+        var llmLabel = d.ollama_model || 'phi3.5';
+        if (!d.ollama_connected) llmLabel += ' (OFFLINE)';
+        else if (d.ollama_model_available === false) llmLabel += ' (NOT PULLED)';
+        else llmLabel += ' (OK)';
+        document.getElementById('lblLLM').textContent = llmLabel;
+        if (msBadge && d.llm_error) msBadge.title = d.llm_error;
+        document.getElementById('lblStreams').textContent = d.active_connections !== undefined ? d.active_connections : '0';
+        document.getElementById('callCountBadge').textContent = d.total_saved_calls !== undefined ? d.total_saved_calls : '0';
+        document.getElementById('llmEngineName').textContent = d.ollama_model || 'phi3.5';
+
+        // Prepopulate config inputs when not actively modifying settings tab
+        if (activeTabId !== 'tabConfig' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+          populateConfigFields(d);
+        }
+
+      } catch (e) {
+        document.getElementById('srvStatusText').textContent = 'OFFLINE';
+        document.getElementById('srvStatusPulse').className = 'w-2 h-2 rounded-full bg-error';
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Live Threat Monitor Polling (/api/last-call)
+    // -------------------------------------------------------------------------
+    async function pollLastCall() {
+      if (document.hidden || activeTabId !== 'tabLive') return;
+      try {
+        var res = await fetch('/api/last-call');
+        var c = await res.json();
+        if (!c) return;
+
+        // Session ID
+        document.getElementById('liveCallId').textContent = c.call_id || 'IDLE';
+
+        // Duration & State
+        var durationSec = Math.round(c.duration_seconds || 0);
+        var mins = String(Math.floor(durationSec / 60)).padStart(2, '0');
+        var secs = String(durationSec % 60).padStart(2, '0');
+        var statusLabel = (c.status === 'in_progress') ? 'REC' : (c.status === 'completed' ? 'SAVED' : 'IDLE');
+        document.getElementById('liveCallDuration').textContent = mins + ':' + secs + ' ' + statusLabel;
+        document.getElementById('liveChunksCount').textContent = (c.chunks_count || 0) + ' chunks';
+
+        var statusDot = document.getElementById('liveStatusDot');
+        if (c.status === 'in_progress') {
+          statusDot.className = 'w-2 h-2 rounded-full bg-error animate-ping';
+        } else if (c.status === 'completed') {
+          statusDot.className = 'w-2 h-2 rounded-full bg-secondary';
+        } else {
+          statusDot.className = 'w-2 h-2 rounded-full bg-outline';
+        }
+
+        // Risk Scores
+        var score = c.current_risk_score !== undefined ? c.current_risk_score : 0;
+        var peak = c.peak_risk_score !== undefined ? c.peak_risk_score : 0;
+        var raw = c.raw_risk_score !== undefined ? c.raw_risk_score : 0;
+        var avg = c.avg_risk_score !== undefined ? c.avg_risk_score : 0.0;
+
+        document.getElementById('gaugeScore').textContent = score;
+        document.getElementById('statPeak').textContent = peak + '/100';
+        document.getElementById('statAvg').textContent = avg + '/100';
+        document.getElementById('statRaw').textContent = raw + '/100';
+
+        // SVG Radial Progress Ring
+        // Circumference = 2 * PI * 100 ≈ 628
+        var offset = Math.max(0, Math.min(628, 628 - (628 * score / 100)));
+        document.getElementById('gaugeProgressRing').setAttribute('stroke-dashoffset', offset);
+
+        // Radar Tier Badge & Pulse
+        var tierBadge = document.getElementById('gaugeTierBadge');
+        var pulseDot = document.getElementById('gaugePulseDot');
+        var statusText = document.getElementById('gaugeStatusText');
+
+        if (score >= 70) {
+          tierBadge.textContent = 'CRITICAL SCAM TIER';
+          tierBadge.className = 'font-mono text-[11px] text-error bg-error/15 px-2 py-0.5 rounded font-semibold tracking-wider border border-error/20';
+          pulseDot.className = 'w-1.5 h-1.5 rounded-full bg-error animate-pulse';
+          statusText.textContent = 'SCAM THREAT ACTIVE';
+          statusText.className = 'font-mono text-[10px] text-error font-semibold';
+        } else if (score >= 40) {
+          tierBadge.textContent = 'SUSPICIOUS TIER';
+          tierBadge.className = 'font-mono text-[11px] text-amber-400 bg-amber-400/15 px-2 py-0.5 rounded font-semibold tracking-wider border border-amber-400/20';
+          pulseDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse';
+          statusText.textContent = 'ELEVATED SUSPICION';
+          statusText.className = 'font-mono text-[10px] text-amber-400 font-semibold';
+        } else if (c.call_id) {
+          tierBadge.textContent = 'NORMAL TIER';
+          tierBadge.className = 'font-mono text-[11px] text-secondary bg-secondary/15 px-2 py-0.5 rounded font-semibold tracking-wider border border-secondary/20';
+          pulseDot.className = 'w-1.5 h-1.5 rounded-full bg-secondary';
+          statusText.textContent = 'CALL CLEAN';
+          statusText.className = 'font-mono text-[10px] text-secondary font-semibold';
+        } else {
+          tierBadge.textContent = 'STANDBY';
+          tierBadge.className = 'font-mono text-[11px] text-outline bg-surface-container px-2 py-0.5 rounded font-semibold tracking-wider';
+          pulseDot.className = 'w-1.5 h-1.5 rounded-full bg-outline';
+          statusText.textContent = 'IDLE';
+          statusText.className = 'font-mono text-[10px] text-outline font-semibold';
+        }
+
+        // Verdict Banner
+        var vBanner = document.getElementById('verdictBanner');
+        var vIcon = document.getElementById('verdictIcon');
+        var vLabel = document.getElementById('verdictLabel');
+        var classif = (c.classification || (score >= 70 ? 'SCAM' : 'LEGITIMATE')).toUpperCase();
+
+        if (classif === 'SCAM' || score >= 70) {
+          vBanner.className = 'w-full py-2 px-4 bg-error text-on-error rounded-lg flex items-center justify-center gap-2 shadow-md transition-colors font-mono font-bold';
+          vIcon.textContent = 'warning';
+          vLabel.textContent = 'SCAM DETECTED (' + score + '/100)';
+        } else if (score >= 40) {
+          vBanner.className = 'w-full py-2 px-4 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg flex items-center justify-center gap-2 transition-colors font-mono font-bold';
+          vIcon.textContent = 'shield';
+          vLabel.textContent = 'SUSPICIOUS CALL DETECTED (' + score + '/100)';
+        } else if (c.call_id) {
+          vBanner.className = 'w-full py-2 px-4 bg-secondary/15 text-secondary border border-secondary/30 rounded-lg flex items-center justify-center gap-2 transition-colors font-mono font-bold';
+          vIcon.textContent = 'verified_user';
+          vLabel.textContent = 'LEGITIMATE / CLEAN CALL (0/100)';
+        } else {
+          vBanner.className = 'w-full py-2 px-4 bg-surface-container text-on-surface-variant rounded-lg flex items-center justify-center gap-2 border border-surface-container-high transition-colors font-mono';
+          vIcon.textContent = 'hourglass_empty';
+          vLabel.textContent = 'IDLE - WAITING FOR STREAM';
+        }
+
+        // Forensic Reason
+        document.getElementById('threatReason').textContent = c.reason || 'Audio stream initialized. Awaiting speech chunks...';
+
+        // Threat Flags List
+        var flagsContainer = document.getElementById('threatFlagsContainer');
+        var flags = c.flags || [];
+        document.getElementById('threatFlagsCount').textContent = flags.length + ' DETECTED';
+
+        if (flags.length === 0) {
+          flagsContainer.innerHTML = '<div class="text-xs text-outline-variant italic py-2 text-center font-mono">No active threat flags detected.</div>';
+        } else {
+          var flagsHtml = '';
+          flags.forEach(function (f) {
+            var isCrit = f.toLowerCase().includes('otp') || f.toLowerCase().includes('arrest') || f.toLowerCase().includes('wire');
+            var bgClass = isCrit ? 'bg-error-container/20 border-error/30 text-error' : 'bg-surface-container border-surface-container-high text-on-surface';
+            flagsHtml += '<div class="flex items-center justify-between px-3 py-1.5 rounded-lg border ' + bgClass + ' font-mono text-xs">' +
+              '<span class="truncate">' + escapeHtml(f) + '</span>' +
+              '<span class="text-[10px] font-bold uppercase ' + (isCrit ? 'text-error' : 'text-primary') + '">' + (isCrit ? 'CRITICAL' : 'DETECTED') + '</span>' +
+              '</div>';
+          });
+          flagsContainer.innerHTML = flagsHtml;
+        }
+
+        // Streaming Latency Telemetry Meter
+        var latVal = document.getElementById('liveLatencyValue');
+        var latBadge = document.getElementById('liveLatencyBadge');
+        var lat = c.latency_ms || 0;
+        if (c.status === 'in_progress' || lat > 0) {
+          if (latVal) latVal.textContent = lat + ' ms';
+          if (latBadge) {
+            if (lat < 200) {
+              latBadge.textContent = 'ULTRA-FAST (<200ms)';
+              latBadge.className = 'text-[9px] px-1.5 py-0.2 rounded bg-secondary/20 text-secondary border border-secondary/30 font-bold uppercase';
+            } else if (lat < 500) {
+              latBadge.textContent = 'REALTIME (<500ms)';
+              latBadge.className = 'text-[9px] px-1.5 py-0.2 rounded bg-primary/20 text-primary border border-primary/30 font-bold uppercase';
+            } else {
+              latBadge.textContent = 'STREAMING';
+              latBadge.className = 'text-[9px] px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 font-bold uppercase';
+            }
+          }
+        } else {
+          if (latVal) latVal.textContent = '-- ms';
+          if (latBadge) {
+            latBadge.textContent = 'STANDBY';
+            latBadge.className = 'text-[9px] px-1.5 py-0.2 rounded bg-surface-container-high text-outline font-bold uppercase tracking-wider';
+          }
+        }
+
+        // Real-time Partial Streaming Indicator & Equalizer Waveform Animation
+        var pBadge = document.getElementById('livePartialBadge');
+        var eqEl = document.getElementById('liveWaveformEqualizer');
+        if (c.status === 'in_progress') {
+          if (eqEl) eqEl.className = 'flex items-end gap-[3px] h-3.5 opacity-100 transition-opacity';
+          if (c.is_partial) {
+            if (pBadge) pBadge.classList.remove('hidden');
+          } else {
+            if (pBadge) pBadge.classList.add('hidden');
+          }
+        } else {
+          if (eqEl) eqEl.className = 'flex items-end gap-[3px] h-3.5 opacity-30 transition-opacity';
+          if (pBadge) pBadge.classList.add('hidden');
+        }
+
+        // Live Transcript Feed
+        var feed = document.getElementById('transcriptFeed');
+        var rolling = c.rolling_window || [];
+        if (rolling.length === 0 && !c.latest_transcript) {
+          feed.innerHTML = '<div class="text-outline text-center py-10 italic">Awaiting audio speech chunks from caller stream...</div>';
+        } else {
+          var transcriptHtml = '';
+          var items = [];
+          var rawItems = rolling.length > 0 ? rolling : (c.latest_transcript ? [c.latest_transcript] : []);
+          rawItems.forEach(function (item) {
+            if (!item) return;
+            // Split multi-sentence paragraphs (e.g. from Sarvam) into individual sentence chunks
+            var sents = item.split(/(?<=[.?!।\n])\s+/);
+            sents.forEach(function (s) {
+              var tr = s.trim();
+              if (tr) items.push(tr);
+            });
+          });
+          if (items.length === 0 && c.latest_transcript) items = [c.latest_transcript];
+          items.forEach(function (chunk, idx) {
+            if (!chunk) return;
+            var isLast = (idx === items.length - 1);
+            var isScammy = chunk.toLowerCase().includes('otp') || chunk.toLowerCase().includes('arrest') || chunk.toLowerCase().includes('money') || chunk.toLowerCase().includes('police') || chunk.toLowerCase().includes('bank');
+            var isPartialItem = (isLast && c.is_partial && c.status === 'in_progress');
+
+            if (isPartialItem) {
+              transcriptHtml += '<div class="p-2 rounded bg-primary/10 border border-primary/30 flex items-start gap-2 animate-pulse">' +
+                '<span class="px-1.5 py-0.2 rounded bg-primary/20 text-primary text-[9px] font-bold select-none font-mono">STREAMING</span>' +
+                '<span class="text-primary italic font-medium">' + escapeHtml(chunk) + '<span class="inline-block w-1.5 h-3 bg-primary ml-1 animate-pulse"></span></span>' +
+                '</div>';
+            } else {
+              transcriptHtml += '<div class="p-2 rounded ' + (isScammy ? 'bg-error-container/15 border border-error/20' : 'bg-surface-container-low/50') + ' flex items-start gap-2">' +
+                '<span class="text-outline select-none font-mono text-[10px] pt-0.5">#' + (idx + 1) + '</span>' +
+                '<span class="' + (isScammy ? 'text-error font-semibold' : 'text-on-surface') + '">' + escapeHtml(chunk) + '</span>' +
+                '</div>';
+            }
+          });
+
+          if (c.status === 'in_progress') {
+            transcriptHtml += '<div class="p-2 rounded bg-surface-container-high/30 flex items-center gap-2 text-secondary animate-pulse font-mono text-xs">' +
+              '<span class="material-symbols-outlined text-[14px]">graphic_eq</span>' +
+              '<span>[Listening for next caller audio chunk...]</span>' +
+              '</div>';
+          }
+          feed.innerHTML = transcriptHtml;
+          feed.scrollTop = feed.scrollHeight;
+        }
+
+        document.getElementById('termChunksInfo').textContent = 'Chunks: ' + (c.chunks_count || 0) + ' received';
+
+        // Multi-Engine Breakdown
+        var eb = c.engine_breakdown || {};
+
+        // Rule-Based
+        var rb = eb.rulebased || {};
+        var rbScore = rb.risk_score !== undefined ? rb.risk_score : 0;
+        document.getElementById('scoreRB').textContent = rbScore + '/100';
+        document.getElementById('barRB').style.width = rbScore + '%';
+        document.getElementById('barRB').className = rbScore >= 50 ? 'bg-error h-full rounded-full transition-all duration-500' : 'bg-primary h-full rounded-full transition-all duration-500';
+        document.getElementById('detailsRB').textContent = rb.reason || (rb.flags && rb.flags.length ? rb.flags.join(', ') : 'No heuristic triggers');
+
+        // XGBoost
+        var xgb = eb.xgboost || {};
+        var xgbScore = xgb.risk_score !== undefined ? xgb.risk_score : 0;
+        document.getElementById('scoreXGB').textContent = xgbScore + '/100';
+        document.getElementById('barXGB').style.width = xgbScore + '%';
+        document.getElementById('barXGB').className = xgbScore >= 50 ? 'bg-error h-full rounded-full transition-all duration-500' : 'bg-secondary h-full rounded-full transition-all duration-500';
+        document.getElementById('detailsXGB').textContent = xgb.reason || 'Decision tree probability: ' + xgbScore + '%';
+
+        // LLM Ollama
+        var llm = eb.llm || {};
+        var llmScore = llm.risk_score !== undefined ? llm.risk_score : 0;
+        document.getElementById('scoreLLM').textContent = llmScore + '/100';
+        document.getElementById('barLLM').style.width = llmScore + '%';
+        document.getElementById('barLLM').className = llmScore >= 50 ? 'bg-error h-full rounded-full transition-all duration-500' : 'bg-primary-container h-full rounded-full transition-all duration-500';
+        document.getElementById('detailsLLM').textContent = llm.reason || 'Generative reasoning standby';
+
+        // Cryptographic Audio Hash Indicator
+        var hashCont = document.getElementById('liveHashContainer');
+        if (hashCont) {
+          if (c.audio_sha256) {
+            hashCont.classList.remove('hidden');
+            var hashEl = document.getElementById('liveHashValue');
+            hashEl.textContent = c.audio_sha256.substring(0, 16) + '...';
+            hashEl.dataset.fullHash = c.audio_sha256;
+            hashEl.title = 'Full SHA-256: ' + c.audio_sha256;
+          } else {
+            hashCont.classList.add('hidden');
+          }
+        }
+
+      } catch (e) {
+        console.error('pollLastCall error:', e);
+      }
+    }
+
+    // Clear Monitor
+    async function clearDashboard() {
+      try {
+        var res = await fetch('/api/last-call/clear', { method: 'POST' });
+        var d = await res.json();
+        if (d.success) {
+          pollLastCall();
+          logSimulatorMessage('[RESET] Live dashboard monitor set to IDLE state.');
+        }
+      } catch (e) {
+        alert('Failed to reset dashboard: ' + e);
+      }
+    }
+
+    function copySessionId() {
+      var id = document.getElementById('liveCallId').textContent;
+      if (id && id !== 'IDLE') {
+        navigator.clipboard.writeText(id).then(function () {
+          var fb = document.getElementById('copyFeedback');
+          fb.classList.remove('hidden');
+          setTimeout(function () { fb.classList.add('hidden'); }, 2000);
+        });
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 2: SAVED CALLS & EVIDENCE VAULT
+    // -------------------------------------------------------------------------
+    async function loadCalls() {
+      try {
+        var res = await fetch('/api/calls');
+        cachedCalls = await res.json();
+        renderCallsTable();
+      } catch (e) {
+        document.getElementById('callsTableBody').innerHTML = '<tr><td colspan="6" class="py-6 text-center text-error">Failed to load calls: ' + escapeHtml(e) + '</td></tr>';
+      }
+    }
+
+    function setCallFilter(filter, btn) {
+      currentCallFilter = filter;
+      document.querySelectorAll('.call-filter-btn').forEach(function (b) {
+        b.className = 'call-filter-btn px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface';
+      });
+      if (btn) {
+        btn.className = 'call-filter-btn px-2.5 py-1 rounded bg-surface-container-high text-primary font-semibold';
+      }
+      renderCallsTable();
+    }
+
+    function filterCallsList() {
+      renderCallsTable();
+    }
+
+    function renderCallsTable() {
+      var tbody = document.getElementById('callsTableBody');
+      var q = (document.getElementById('callsSearchInput').value || '').toLowerCase();
+
+      var filtered = cachedCalls.filter(function (c) {
+        // Filter by category
+        var isScam = (c.classification === 'SCAM' || c.final_risk_score >= 70 || c.peak_risk_score >= 70);
+        if (currentCallFilter === 'scam' && !isScam) return false;
+        if (currentCallFilter === 'legit' && isScam) return false;
+
+        // Search query
+        if (q) {
+          var str = (c.call_id + ' ' + (c.transcript || '') + ' ' + (c.reason || '')).toLowerCase();
+          if (!str.includes(q)) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('savedCallsSummary').textContent = filtered.length + ' of ' + cachedCalls.length + ' Calls';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-8 text-center text-outline">No calls match the selected filter.</td></tr>';
+        return;
+      }
+
+      var html = '';
+      filtered.forEach(function (c) {
+        var isScam = (c.classification === 'SCAM' || c.final_risk_score >= 70 || c.peak_risk_score >= 70);
+        var score = c.final_risk_score !== undefined ? c.final_risk_score : (c.peak_risk_score || 0);
+        var isSelected = (c.call_id === selectedCallId);
+
+        html += '<tr onclick="selectCall(\'' + escapeHtml(c.call_id) + '\')" class="cursor-pointer transition-colors ' + (isSelected ? 'bg-surface-container-high' : 'hover:bg-surface-container') + '\">' +
+          '<td class="py-2.5 px-3">' +
+          '<div class="flex items-center gap-1.5">' +
+          '<span class="w-1.5 h-1.5 rounded-full ' + (isScam ? 'bg-error' : 'bg-secondary') + '"></span>' +
+          '<span class="font-bold ' + (isScam ? 'text-error' : 'text-primary') + '">' + escapeHtml(c.call_id) + '</span>' +
+          '</div>' +
+          '</td>' +
+          '<td class="py-2.5 px-3 text-on-surface-variant text-[11px]">' + escapeHtml(c.formatted_time || c.timestamp || '--') + '</td>' +
+          '<td class="py-2.5 px-3 text-on-surface">' + (c.duration_seconds || 0) + 's</td>' +
+          '<td class="py-2.5 px-3 font-bold ' + (isScam ? 'text-error' : 'text-secondary') + '">' + score + '/100</td>' +
+          '<td class="py-2.5 px-3">' +
+          '<span class="px-2 py-0.5 rounded text-[10px] font-bold ' + (isScam ? 'bg-error-container text-on-error-container' : 'bg-secondary/10 text-secondary border border-secondary/20') + '">' +
+          escapeHtml(c.classification || (isScam ? 'SCAM' : 'LEGIT')) +
+          '</span>' +
+          '</td>' +
+          '<td class="py-2.5 px-3 text-right">' +
+          '<button class="p-1 rounded hover:bg-surface-container-highest text-primary" title="Inspect call">' +
+          '<span class="material-symbols-outlined text-[16px]">visibility</span>' +
+          '</button>' +
+          '</td>' +
+          '</tr>';
+      });
+
+      tbody.innerHTML = html;
+
+      // Automatically select first call if none selected
+      if (!selectedCallId && filtered.length > 0) {
+        selectCall(filtered[0].call_id);
+      }
+    }
+
+    function selectCall(callId) {
+      selectedCallId = callId;
+      var c = cachedCalls.find(function (item) { return item.call_id === callId; });
+      if (!c) return;
+
+      document.getElementById('drawerCallId').textContent = c.call_id;
+      document.getElementById('drawerTime').textContent = (c.formatted_time || c.timestamp || '') + ' • Duration: ' + (c.duration_seconds || 0) + 's • Chunks: ' + (c.chunks_count || 1);
+
+      var isScam = (c.classification === 'SCAM' || (c.final_risk_score || 0) >= 70);
+      var vBadge = document.getElementById('drawerVerdictBadge');
+      vBadge.textContent = c.classification || (isScam ? 'SCAM' : 'LEGITIMATE');
+      vBadge.className = 'font-mono text-[10px] px-2 py-0.5 rounded font-semibold ' + (isScam ? 'bg-error-container text-on-error-container' : 'bg-secondary/10 text-secondary border border-secondary/20');
+
+      document.getElementById('drawerDeleteBtn').classList.remove('hidden');
+
+      // Audio Player
+      var audioSec = document.getElementById('drawerAudioSection');
+      var audioElem = document.getElementById('drawerAudioElement');
+      var dlLink = document.getElementById('drawerDownloadAudioLink');
+
+      if (c.audio_file) {
+        var audioUrl = '/api/calls/' + encodeURIComponent(c.call_id) + '/audio';
+        audioElem.src = audioUrl;
+        dlLink.href = audioUrl;
+        dlLink.download = c.call_id + '.wav';
+        audioSec.classList.remove('hidden');
+      } else {
+        audioElem.src = '';
+        audioSec.classList.add('hidden');
+      }
+
+      // Cryptographic Audio Hash & Tamper-Proof Audit
+      var hashSec = document.getElementById('drawerHashSection');
+      if (c.audio_file || c.audio_sha256) {
+        hashSec.classList.remove('hidden');
+        var hashVal = c.audio_sha256 || 'Computing SHA-256...';
+        document.getElementById('drawerHashValue').textContent = hashVal;
+        var badge = document.getElementById('drawerHashTamperBadge');
+        var badgeIcon = document.getElementById('drawerHashBadgeIcon');
+        var badgeText = document.getElementById('drawerHashBadgeText');
+        var detailText = document.getElementById('drawerHashDetailText');
+
+        if (c.tamper_status === 'tampered') {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-error-container text-error border border-error/30 flex items-center gap-1';
+          badgeIcon.textContent = 'warning';
+          badgeText.textContent = 'TAMPERED / MISMATCH';
+          detailText.innerHTML = '<span class="text-error font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">warning</span>File Altered: Hash does not match original recording!</span>';
+        } else {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1';
+          badgeIcon.textContent = 'check_circle';
+          badgeText.textContent = 'Tamper-Free';
+          detailText.innerHTML = '<span class="text-secondary font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">verified</span>File integrity verified: No tampering detected since recording.</span>';
+        }
+      } else {
+        hashSec.classList.add('hidden');
+      }
+
+      // Reason & Flags
+      var reasonSec = document.getElementById('drawerReasonSection');
+      document.getElementById('drawerReasonText').textContent = c.reason || 'No detailed reasoning recorded.';
+      var flagsContainer = document.getElementById('drawerFlagsContainer');
+      var flags = c.flags || [];
+      if (flags.length > 0) {
+        flagsContainer.innerHTML = flags.map(function (f) {
+          return '<span class="px-2 py-0.5 rounded bg-surface-container font-mono text-[10px] text-primary border border-surface-container-high">' + escapeHtml(f) + '</span>';
+        }).join('');
+      } else {
+        flagsContainer.innerHTML = '<span class="text-outline text-[11px] italic font-mono">No threat flags triggered.</span>';
+      }
+      reasonSec.classList.remove('hidden');
+
+      // Transcript
+      var transSec = document.getElementById('drawerTranscriptSection');
+      document.getElementById('drawerTranscriptText').textContent = c.transcript || 'No transcript available for this call.';
+      transSec.classList.remove('hidden');
+
+      // Segments
+      var segSec = document.getElementById('drawerSegmentsSection');
+      var segList = document.getElementById('drawerSegmentsList');
+      var segments = c.segments || [];
+      if (segments.length > 0) {
+        segList.innerHTML = segments.map(function (s) {
+          return '<div class="p-2 rounded bg-surface-container flex items-start justify-between gap-2 border border-surface-container-high/30">' +
+            '<div>' +
+            '<div class="text-[10px] text-outline font-mono">Chunk #' + (s.chunk_idx || 1) + ' (' + (s.elapsed || 0) + 's)</div>' +
+            '<div class="text-xs text-on-surface">' + escapeHtml(s.text || '') + '</div>' +
+            '</div>' +
+            '<span class="font-bold ' + (s.risk_score >= 50 ? 'text-error' : 'text-secondary') + '">' + (s.risk_score || 0) + '</span>' +
+            '</div>';
+        }).join('');
+        segSec.classList.remove('hidden');
+      } else {
+        segSec.classList.add('hidden');
+      }
+    }
+
+    async function deleteSelectedCall() {
+      if (!selectedCallId) return;
+      if (!confirm('Are you sure you want to permanently delete call record ' + selectedCallId + '?')) return;
+
+      try {
+        var res = await fetch('/api/calls/' + encodeURIComponent(selectedCallId), { method: 'DELETE' });
+        var d = await res.json();
+        if (d.success) {
+          selectedCallId = null;
+          loadCalls();
+          fetchStatus();
+          logSimulatorMessage('[DELETE] Call record ' + d.call_id + ' deleted from vault.');
+        }
+      } catch (e) {
+        alert('Delete failed: ' + e);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 3: THREAT SIMULATOR SANDBOX
+    // -------------------------------------------------------------------------
+    async function runSampleTest(sampleName) {
+      var updateLive = document.getElementById('cbUpdateLive').checked;
+      logSimulatorMessage('[AUDIO_SIM] Starting bundled sample test: ' + sampleName + '.wav...');
+
+      try {
+        var res = await fetch('/api/test/sample/' + encodeURIComponent(sampleName) + '?update_dashboard=' + updateLive, {
+          method: 'POST'
+        });
+        var d = await res.json();
+
+        displayAudioSimOutcome(d);
+        logSimulatorMessage('[AUDIO_SIM] Done. Score: ' + d.risk_score + '/100. Latency: ' + d.transcribe_time_sec + 's STT, ' + d.score_time_sec + 's Scoring.');
+        if (updateLive) {
+          fetchStatus();
+          pollLastCall();
+        }
+      } catch (e) {
+        alert('Simulation failed: ' + e);
+        logSimulatorMessage('[AUDIO_SIM_ERROR] ' + e);
+      }
+    }
+
+    async function uploadAndTestAudio() {
+      var fileInput = document.getElementById('simAudioFileInput');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert('Please choose an audio file first (.wav or .mp3).');
+        return;
+      }
+
+      var file = fileInput.files[0];
+      var updateLive = document.getElementById('cbUpdateLive').checked;
+      var btn = document.getElementById('btnRunCustomAudio');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      logSimulatorMessage('[AUDIO_SIM] Uploading and processing ' + file.name + ' (' + Math.round(file.size / 1024) + ' KB)...');
+
+      var formData = new FormData();
+      formData.append('file', file);
+      formData.append('save_to_history', updateLive);
+
+      try {
+        var res = await fetch('/api/test/audio', {
+          method: 'POST',
+          body: formData
+        });
+        var d = await res.json();
+        displayAudioSimOutcome(d);
+        logSimulatorMessage('[AUDIO_SIM] ' + file.name + ' analyzed. Score: ' + d.risk_score + '/100.');
+        if (updateLive) {
+          fetchStatus();
+          pollLastCall();
+        }
+      } catch (e) {
+        alert('Audio test failed: ' + e);
+        logSimulatorMessage('[AUDIO_SIM_ERROR] ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+      }
+    }
+
+    function displayAudioSimOutcome(d) {
+      var box = document.getElementById('simAudioOutcome');
+      box.classList.remove('hidden');
+
+      var score = d.risk_score || 0;
+      var isScam = score >= 70;
+
+      var vBadge = document.getElementById('simAudioVerdict');
+      vBadge.textContent = isScam ? 'SCAM DETECTED' : (score >= 40 ? 'SUSPICIOUS' : 'CLEAN / LEGIT');
+      vBadge.className = 'font-mono text-xs px-2 py-0.5 rounded font-bold ' + (isScam ? 'bg-error-container text-on-error-container' : (score >= 40 ? 'bg-amber-500/20 text-amber-300' : 'bg-secondary/15 text-secondary'));
+
+      document.getElementById('simAudioTranscript').textContent = d.transcript ? ('"' + d.transcript + '"') : '(No speech detected)';
+      document.getElementById('simAudioScore').textContent = score + '/100';
+      document.getElementById('simAudioLatency').textContent = 'Turnaround: ' + (d.transcribe_time_sec || 0) + 's STT • ' + (d.score_time_sec || 0) + 's score';
+    }
+
+    // SMS Simulation
+    function fillSmsTemplate(type) {
+      var input = document.getElementById('smsBodyInput');
+      if (type === 'kyc') {
+        input.value = "URGENT: Your Chase checking account has been blocked due to suspicious activity. Verify KYC immediately at https://chase-security-verify.net/login or funds will be frozen.";
+      } else if (type === 'package') {
+        input.value = "USPS Alert: Your package delivery has been put on hold due to incorrect address. Pay $1.99 redelivery fee at https://usps-redelivery-tracking.com";
+      } else if (type === 'lottery') {
+        input.value = "Congratulations! You won $2,500,000 in the MegaDraw. To claim your prize transfer $250 processing fee to UPI id megadraw@okaxis.";
+      } else if (type === 'otp') {
+        input.value = "Your one-time login passcode is 849201. Valid for 10 minutes. Do not share this OTP with anyone, including bank representatives.";
+      }
+      updateSmsCharCount();
+    }
+
+    function updateSmsCharCount() {
+      var val = document.getElementById('smsBodyInput').value || '';
+      document.getElementById('smsCharCounter').textContent = val.length + ' Chars / ' + (Math.ceil(val.length / 160) || 1) + ' Segments';
+    }
+
+    async function runSmsScan() {
+      var body = document.getElementById('smsBodyInput').value;
+      if (!body.trim()) {
+        alert('Please enter SMS text to scan.');
+        return;
+      }
+
+      var senderType = 'unknown';
+      var checkedRadio = document.querySelector('input[name="smsSenderType"]:checked');
+      if (checkedRadio) senderType = checkedRadio.value;
+
+      var btn = document.getElementById('btnRunSms');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      logSimulatorMessage('[SMS_SCAN] Analyzing SMS payload (sender_type=' + senderType + ')...');
+
+      try {
+        var res = await fetch('/api/test/sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ body: body, sender_type: senderType })
+        });
+        var d = await res.json();
+
+        var box = document.getElementById('smsOutcome');
+        box.classList.remove('hidden');
+
+        var score = d.risk_score || 0;
+        var isScam = score >= 50;
+
+        document.getElementById('smsScoreBadge').textContent = 'Threat Score: ' + score + '/100';
+        var vBadge = document.getElementById('smsVerdictBadge');
+        vBadge.textContent = isScam ? 'MALICIOUS SMISHING' : 'LEGITIMATE SMS';
+        vBadge.className = 'text-xs px-2 py-0.5 rounded font-bold ' + (isScam ? 'bg-error-container text-on-error-container' : 'bg-secondary/15 text-secondary');
+
+        document.getElementById('smsReasonText').textContent = d.reason || 'No threat triggers identified.';
+
+        var flagsContainer = document.getElementById('smsFlagsContainer');
+        var flags = d.flags || [];
+        if (flags.length > 0) {
+          flagsContainer.innerHTML = flags.map(function (f) {
+            return '<span class="px-2 py-0.5 rounded bg-error-container/20 text-error border border-error/30 text-[10px]">' + escapeHtml(f) + '</span>';
+          }).join('');
+        } else {
+          flagsContainer.innerHTML = '<span class="text-outline text-[11px] italic">No fraud indicators.</span>';
+        }
+
+        logSimulatorMessage('[SMS_SCAN] Score: ' + score + '/100. Verdict: ' + (isScam ? 'MALICIOUS' : 'CLEAN'));
+      } catch (e) {
+        alert('SMS scan failed: ' + e);
+        logSimulatorMessage('[SMS_ERROR] ' + e);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+      }
+    }
+
+    function logSimulatorMessage(msg) {
+      var feed = document.getElementById('simLogFeed');
+      if (!feed) return;
+      var now = new Date().toTimeString().split(' ')[0];
+      var p = document.createElement('p');
+      p.innerHTML = '<span class="text-outline">' + now + '</span> ' + escapeHtml(msg);
+      feed.appendChild(p);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 4: SERVER CLI OPTIONS
+    // -------------------------------------------------------------------------
+    function populateConfigFields(d) {
+      if (!d) return;
+      if (d.detection_mode && document.getElementById('cfgMode')) document.getElementById('cfgMode').value = d.detection_mode;
+      if (d.stt_provider && document.getElementById('cfgSttProvider')) {
+        document.getElementById('cfgSttProvider').value = d.stt_provider;
+        onSttProviderChange(false);
+      }
+      if (d.whisper_model && document.getElementById('cfgWhisper')) document.getElementById('cfgWhisper').value = d.whisper_model;
+      if (d.sarvam_model && document.getElementById('cfgSarvamModel')) document.getElementById('cfgSarvamModel').value = d.sarvam_model;
+      if (d.sarvam_mode && document.getElementById('cfgSarvamMode')) document.getElementById('cfgSarvamMode').value = d.sarvam_mode;
+      if (d.sarvam_language && document.getElementById('cfgSarvamLang')) document.getElementById('cfgSarvamLang').value = d.sarvam_language;
+      if (d.nvidia_asr_model && document.getElementById('cfgNvModel')) document.getElementById('cfgNvModel').value = d.nvidia_asr_model;
+      if (d.ollama_host && document.getElementById('cfgOllamaHost')) document.getElementById('cfgOllamaHost').value = d.ollama_host;
+      if (d.ollama_model && document.getElementById('cfgOllamaModel')) document.getElementById('cfgOllamaModel').value = d.ollama_model;
+      if (d.audio_system_prompt && document.getElementById('cfgAudioPrompt')) document.getElementById('cfgAudioPrompt').value = d.audio_system_prompt;
+      if (d.sms_system_prompt && document.getElementById('cfgSmsPrompt')) document.getElementById('cfgSmsPrompt').value = d.sms_system_prompt;
+    }
+
+    async function syncConfigFromStatus() {
+      try {
+        var res = await fetch('/api/status');
+        var d = await res.json();
+        populateConfigFields(d);
+      } catch (e) { }
+    }
+
+    async function quickUpdateConfig(updates) {
+      var status = document.getElementById('configSaveStatus');
+      var toast = document.getElementById('configSaveToast');
+      if (toast) toast.classList.add('hidden');
+      if (status) status.textContent = 'Saving…';
+      try {
+        var res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        var data = await res.json();
+        if (!res.ok || !data || !data.success || data.persisted !== true) {
+          if (status) status.textContent = data && typeof data.detail === 'string' ? data.detail : 'Failed to save configuration. Please try again.';
+          return;
+        }
+        if (status) status.textContent = 'Saved — survives server restarts';
+        fetchStatus();
+        logSimulatorMessage('[CONFIG] Configuration saved and applied.');
+      } catch (err) {
+        if (status) status.textContent = 'Failed to save configuration. Please try again.';
+      }
+    }
+
+    async function saveConfig(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      var btn = document.getElementById('btnSaveConfig');
+      var status = document.getElementById('configSaveStatus');
+      var toast = document.getElementById('configSaveToast');
+      if (toast) toast.classList.add('hidden');
+      if (status) status.textContent = 'Saving…';
+      if (btn) {
+        btn.disabled = true;
+        btn.classList.add('opacity-50');
+      }
+
+      var payload = {};
+      var elMode = document.getElementById('cfgMode');
+      if (elMode) payload.mode = elMode.value;
+
+      var elStt = document.getElementById('cfgSttProvider');
+      if (elStt) payload.stt_provider = elStt.value;
+
+      var elWhisper = document.getElementById('cfgWhisper');
+      if (elWhisper) payload.whisper_model = elWhisper.value;
+
+      var elSarvamModel = document.getElementById('cfgSarvamModel');
+      if (elSarvamModel) payload.sarvam_model = elSarvamModel.value;
+
+      var elSarvamMode = document.getElementById('cfgSarvamMode');
+      if (elSarvamMode) payload.sarvam_mode = elSarvamMode.value;
+
+      var elSarvamLang = document.getElementById('cfgSarvamLang');
+      if (elSarvamLang) payload.sarvam_language = elSarvamLang.value;
+
+      var elNvModel = document.getElementById('cfgNvModel');
+      if (elNvModel) payload.nvidia_asr_model = elNvModel.value;
+      payload.nvidia_asr_endpoint = 'local_in_process';
+
+      var elOllamaHost = document.getElementById('cfgOllamaHost');
+      if (elOllamaHost) payload.ollama_host = elOllamaHost.value;
+
+      var elOllamaModel = document.getElementById('cfgOllamaModel');
+      if (elOllamaModel) payload.ollama_model = elOllamaModel.value;
+
+      var elAudioPrompt = document.getElementById('cfgAudioPrompt');
+      if (elAudioPrompt && elAudioPrompt.value.trim()) payload.audio_system_prompt = elAudioPrompt.value;
+
+      var elSmsPrompt = document.getElementById('cfgSmsPrompt');
+      if (elSmsPrompt && elSmsPrompt.value.trim()) payload.sms_system_prompt = elSmsPrompt.value;
+
+      var sarvamKeyInput = document.getElementById('cfgSarvamApiKey') ? document.getElementById('cfgSarvamApiKey').value.trim() : '';
+      if (sarvamKeyInput) payload.sarvam_api_key = sarvamKeyInput;
+
+      var nvKeyInput = document.getElementById('cfgNvApiKey') ? document.getElementById('cfgNvApiKey').value.trim() : '';
+      if (nvKeyInput) payload.nvidia_api_key = nvKeyInput;
+
+      try {
+        var res = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (!res.ok || !data || !data.success || data.persisted !== true) {
+          if (status) status.textContent = data && typeof data.detail === 'string' ? data.detail : 'Failed to save configuration. Please try again.';
+          return;
+        }
+        if (status) status.textContent = 'Saved — survives server restarts';
+        if (document.getElementById('cfgSarvamApiKey')) document.getElementById('cfgSarvamApiKey').value = '';
+        if (document.getElementById('cfgNvApiKey')) document.getElementById('cfgNvApiKey').value = '';
+        if (toast) {
+          toast.classList.remove('hidden');
+          setTimeout(function () { toast.classList.add('hidden'); }, 4000);
+        }
+        await fetchStatus();
+        logSimulatorMessage('[CONFIG] Configuration saved and applied.');
+      } catch (err) {
+        if (status) status.textContent = 'Failed to save configuration. Please try again.';
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.classList.remove('opacity-50');
+        }
+      }
+    }
+
+    // Utility: XSS Escaper
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // -------------------------------------------------------------------------
+    // Cryptographic Audio Hash & Tamper Verification
+    // -------------------------------------------------------------------------
+    function copyDrawerHash() {
+      var val = document.getElementById('drawerHashValue').textContent;
+      if (!val || val === 'Computing SHA-256...') return;
+      function onCopied() {
+        var txt = document.getElementById('drawerCopyHashText');
+        var icon = document.getElementById('drawerCopyHashIcon');
+        if (txt) txt.textContent = 'Copied!';
+        if (icon) icon.textContent = 'check';
+        setTimeout(function () {
+          if (txt) txt.textContent = 'Copy';
+          if (icon) icon.textContent = 'content_copy';
+        }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(onCopied).catch(function () {
+          try {
+            var ta = document.createElement('textarea');
+            ta.value = val;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          } catch (e) { }
+          onCopied();
+        });
+      } else {
+        try {
+          var ta = document.createElement('textarea');
+          ta.value = val;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch (e) { }
+        onCopied();
+      }
+    }
+
+    async function verifyDrawerHash() {
+      if (!selectedCallId) return;
+      var detailText = document.getElementById('drawerHashDetailText');
+      detailText.innerHTML = '<span class="text-outline italic">Recomputing SHA-256 hash on server to check disk integrity...</span>';
+      try {
+        var res = await fetch('/api/calls/' + encodeURIComponent(selectedCallId) + '/verify-hash');
+        var data = await res.json();
+        var badge = document.getElementById('drawerHashTamperBadge');
+        var badgeIcon = document.getElementById('drawerHashBadgeIcon');
+        var badgeText = document.getElementById('drawerHashBadgeText');
+
+        if (data.verified) {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/15 text-secondary border border-secondary/30 flex items-center gap-1';
+          badgeIcon.textContent = 'check_circle';
+          badgeText.textContent = 'Tamper-Free';
+          detailText.innerHTML = '<span class="text-secondary font-semibold flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">verified</span>Verified Intact: File (' + (data.file_size_bytes || 0) + ' bytes) has not been tampered since recording.</span>';
+        } else if (data.tamper_detected) {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-error-container text-error border border-error/30 flex items-center gap-1';
+          badgeIcon.textContent = 'warning';
+          badgeText.textContent = 'TAMPERED / MISMATCH';
+          detailText.innerHTML = '<span class="text-error font-bold flex items-center gap-1"><span class="material-symbols-outlined text-[13px]">warning</span>ALERT: Audio file altered since creation! Hash mismatch.</span>';
+        } else {
+          badgeText.textContent = 'Unverified';
+          detailText.textContent = data.message || 'Verification complete.';
+        }
+        if (data.current_sha256) {
+          document.getElementById('drawerHashValue').textContent = data.current_sha256;
+        }
+      } catch (e) {
+        detailText.textContent = 'Verification failed: ' + e;
+      }
+    }
+
+    function copyLiveHash() {
+      var el = document.getElementById('liveHashValue');
+      var val = el.dataset.fullHash || el.textContent;
+      if (!val) return;
+      navigator.clipboard.writeText(val).then(function () {
+        var fb = document.getElementById('copyLiveHashFeedback');
+        var icon = document.getElementById('liveHashCopyIcon');
+        fb.classList.remove('hidden');
+        icon.textContent = 'check';
+        setTimeout(function () {
+          fb.classList.add('hidden');
+          icon.textContent = 'content_copy';
+        }, 2000);
+      });
+    }
+
+    function onSttProviderChange(autoSave) {
+      var sel = document.getElementById('cfgSttProvider').value;
+      var pWhisper = document.getElementById('panelWhisperOptions');
+      var pNemotron = document.getElementById('panelNemotronOptions');
+      var pSarvam = document.getElementById('panelSarvamOptions');
+      var badge = document.getElementById('sttProviderBadge');
+
+      if (pWhisper) pWhisper.classList.add('hidden');
+      if (pNemotron) pNemotron.classList.add('hidden');
+      if (pSarvam) pSarvam.classList.add('hidden');
+
+      if (sel === 'sarvam') {
+        if (pSarvam) pSarvam.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'ACTIVE: SARVAM AI';
+          badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded font-bold bg-amber-400/15 text-amber-300 border border-amber-400/20 uppercase tracking-wide';
+        }
+      } else if (sel === 'parakeet') {
+        if (pNemotron) pNemotron.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'ACTIVE: PARAKEET-CTC 0.6B (LOCAL)';
+          badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded font-bold bg-secondary/15 text-secondary border border-secondary/20 uppercase tracking-wide';
+        }
+      } else if (sel === 'nemotron') {
+        if (pNemotron) pNemotron.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'ACTIVE: NEMOTRON (LOCAL)';
+          badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded font-bold bg-secondary/15 text-secondary border border-secondary/20 uppercase tracking-wide';
+        }
+      } else {
+        if (pWhisper) pWhisper.classList.remove('hidden');
+        if (badge) {
+          badge.textContent = 'ACTIVE: WHISPER';
+          badge.className = 'font-mono text-[10px] px-2 py-0.5 rounded font-bold bg-primary/15 text-primary border border-primary/20 uppercase tracking-wide';
+        }
+      }
+
+      if (autoSave) {
+        quickUpdateConfig({ stt_provider: sel });
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // SMS THREAT MONITOR (ANDROID SYNCED INCOMING MESSAGES)
+    // -------------------------------------------------------------------------
+    var allSmsRecords = [];
+
+    async function loadSmsRecords() {
+      try {
+        var res = await fetch('/api/sms');
+        if (!res.ok) throw new Error('SMS API returned HTTP ' + res.status);
+        var d = await res.json();
+        allSmsRecords = d.records || [];
+
+        var total = d.total || 0;
+        var threats = d.scams || 0;
+        var safe = d.safe || 0;
+
+        var badge = document.getElementById('smsCountBadge');
+        if (badge) badge.textContent = total;
+        var sCount = document.getElementById('smsSummaryCount');
+        if (sCount) sCount.textContent = total + ' Message' + (total === 1 ? '' : 's');
+        var mTot = document.getElementById('metricSmsTotal');
+        if (mTot) mTot.textContent = total;
+        var mThr = document.getElementById('metricSmsThreats');
+        if (mThr) mThr.textContent = threats;
+        var mSafe = document.getElementById('metricSmsSafe');
+        if (mSafe) mSafe.textContent = safe;
+
+        filterSmsList();
+      } catch (e) {
+        console.error('Failed to load SMS records:', e);
+        var container = document.getElementById('smsListContainer');
+        if (container) {
+          container.innerHTML = '<div class="col-span-full text-center py-12 text-error font-mono text-xs">' +
+            '<span class="material-symbols-outlined text-[36px] mb-2 block mx-auto">error</span>' +
+            'SMS monitor unavailable. Use Refresh to retry.</div>';
+        }
+      }
+    }
+
+    async function pollSmsBadge() {
+      try {
+        var res = await fetch('/api/sms');
+        if (!res.ok) return;
+        var d = await res.json();
+        var total = d.total || 0;
+        var threats = d.scams || 0;
+        var safe = d.safe || 0;
+
+        var badge = document.getElementById('smsCountBadge');
+        if (badge) badge.textContent = total;
+
+        var sCount = document.getElementById('smsSummaryCount');
+        if (sCount) sCount.textContent = total + ' Message' + (total === 1 ? '' : 's');
+        var mTot = document.getElementById('metricSmsTotal');
+        if (mTot) mTot.textContent = total;
+        var mThr = document.getElementById('metricSmsThreats');
+        if (mThr) mThr.textContent = threats;
+        var mSafe = document.getElementById('metricSmsSafe');
+        if (mSafe) mSafe.textContent = safe;
+
+        if (activeTabId === 'tabSms') {
+          allSmsRecords = d.records || [];
+          filterSmsList();
+        }
+      } catch (e) { }
+    }
+
+    function filterSmsList() {
+      var searchInput = document.getElementById('smsSearchInput');
+      var filterSelect = document.getElementById('smsFilterSelect');
+      var query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      var filter = filterSelect ? filterSelect.value : 'all';
+      var container = document.getElementById('smsListContainer');
+      if (!container) return;
+
+      var filtered = allSmsRecords.filter(function (r) {
+        var matchQuery = !query ||
+          (r.sender && r.sender.toLowerCase().includes(query)) ||
+          (r.body && r.body.toLowerCase().includes(query)) ||
+          (r.reason && r.reason.toLowerCase().includes(query));
+
+        var matchFilter = true;
+        var risk = r.risk_score || 0;
+        if (filter === 'threats') {
+          matchFilter = risk >= 40;
+        } else if (filter === 'safe') {
+          matchFilter = risk < 40;
+        }
+        return matchQuery && matchFilter;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-outline font-mono text-xs">' +
+          '<span class="material-symbols-outlined text-[36px] text-outline/50 mb-2 block mx-auto">sms</span>' +
+          (allSmsRecords.length === 0 ?
+            'No SMS messages received from Android yet.<br/>Incoming phone SMS will be automatically forwarded here for multi-engine fraud analysis.' :
+            'No SMS messages match your search or filter.') +
+          '</div>';
+        return;
+      }
+
+      var html = '';
+      filtered.forEach(function (r) {
+        var risk = r.risk_score || 0;
+        var isScam = risk >= 60;
+        var isSuspicious = risk >= 35 && risk < 60;
+
+        var scoreColor = isScam ? 'bg-error-container text-error border-error/30' :
+          (isSuspicious ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-secondary/15 text-secondary border-secondary/30');
+
+        var senderBadgeColor = r.sender_type === 'dlt_registered' ? 'bg-secondary/15 text-secondary' :
+          (r.sender_type === 'plain_number' ? 'bg-surface-container-high text-on-surface' : 'bg-amber-500/15 text-amber-300');
+        var senderLabel = r.sender_type === 'dlt_registered' ? 'DLT Registered' :
+          (r.sender_type === 'plain_number' ? 'Mobile Number' : 'Unknown / Spoofed');
+
+        var flagsHtml = '';
+        (r.flags || []).forEach(function (f) {
+          flagsHtml += '<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-[10px] font-mono text-on-surface-variant font-medium">⚠️ ' + escapeHtml(f) + '</span>';
+        });
+
+        html += '<div class="p-4 rounded-xl bg-surface-container-low border ' + (isScam ? 'border-error/30 shadow-error/5' : 'border-surface-container-high/40') + ' flex flex-col justify-between gap-3 shadow-sm hover:border-outline-variant/60 transition-all">' +
+          '<div>' +
+          '<div class="flex items-start justify-between gap-2 mb-2">' +
+          '<div class="flex items-center gap-1.5 flex-wrap">' +
+          '<span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ' + senderBadgeColor + '">' + senderLabel + '</span>' +
+          '<span class="font-mono text-xs font-bold text-on-surface">' + escapeHtml(r.sender || 'Unknown') + '</span>' +
+          '</div>' +
+          '<span class="px-2 py-0.5 rounded-full font-mono text-[10px] font-bold border ' + scoreColor + '">' + risk + '/100 ' + (isScam ? 'SCAM' : (isSuspicious ? 'SUSPICIOUS' : 'SAFE')) + '</span>' +
+          '</div>' +
+          '<p class="text-xs font-mono text-on-surface bg-surface-container-lowest p-3 rounded-lg leading-relaxed whitespace-pre-wrap select-text">' + escapeHtml(r.body || '') + '</p>' +
+          (r.reason ? '<p class="mt-2 text-[11px] font-mono text-on-surface-variant line-clamp-2">🔍 ' + escapeHtml(r.reason) + '</p>' : '') +
+          (flagsHtml ? '<div class="mt-2 flex flex-wrap gap-1">' + flagsHtml + '</div>' : '') +
+          '</div>' +
+          '<div class="flex items-center justify-between pt-2 border-t border-surface-container-high/40 font-mono text-[11px] text-outline">' +
+          '<span>' + (r.timestamp || '') + '</span>' +
+          '<div class="flex items-center gap-1">' +
+          '<button onclick="openSmsDetail(\'' + r.id + '\')" class="px-2 py-1 rounded hover:bg-surface-container text-primary font-medium transition-colors" title="View Full Engine Matrix">Analyze</button>' +
+          '<button onclick="deleteSmsRecord(\'' + r.id + '\')" class="p-1 rounded hover:bg-error-container/20 text-outline hover:text-error transition-colors" title="Delete SMS"><span class="material-symbols-outlined text-[14px]">delete</span></button>' +
+          '</div>' +
+          '</div>' +
+          '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    function openSmsDetail(id) {
+      var record = allSmsRecords.find(function (r) { return r.id === id; });
+      if (!record) return;
+
+      var risk = record.risk_score || 0;
+      var isScam = risk >= 60;
+      var isSuspicious = risk >= 35 && risk < 60;
+
+      document.getElementById('modalSmsSenderBadge').textContent = (record.sender || 'Unknown') + ' (' + (record.sender_type || 'unknown') + ')';
+      document.getElementById('modalSmsSenderBadge').className = 'text-xs px-2 py-0.5 rounded font-mono font-bold ' +
+        (record.sender_type === 'dlt_registered' ? 'bg-secondary/15 text-secondary' : 'bg-surface-container-high text-on-surface');
+
+      var scoreBadge = document.getElementById('modalSmsScoreBadge');
+      scoreBadge.textContent = risk + '/100 ' + (isScam ? 'CRITICAL SMISHING' : (isSuspicious ? 'SUSPICIOUS' : 'SAFE'));
+      scoreBadge.className = 'text-xs px-2.5 py-0.5 rounded-full font-mono font-bold ' +
+        (isScam ? 'bg-error-container text-error' : (isSuspicious ? 'bg-amber-500/20 text-amber-300' : 'bg-secondary/15 text-secondary'));
+
+      document.getElementById('modalSmsTimestamp').textContent = record.timestamp || '';
+      document.getElementById('modalSmsBody').textContent = record.body || '';
+      document.getElementById('modalSmsReason').textContent = record.reason || 'No specific threat indicators triggered.';
+
+      var flagsContainer = document.getElementById('modalSmsFlags');
+      var fHtml = '';
+      (record.flags || []).forEach(function (f) {
+        fHtml += '<span class="px-2 py-0.5 rounded bg-error-container/20 text-error text-xs font-mono font-semibold">⚠️ ' + escapeHtml(f) + '</span>';
+      });
+      flagsContainer.innerHTML = fHtml || '<span class="text-xs text-outline italic font-mono">No threat flags triggered</span>';
+
+      var eb = record.engine_breakdown || {};
+      var rb = eb.rulebased || {};
+      var xg = eb.xgboost || {};
+      var llm = eb.llm || {};
+
+      document.getElementById('modalSmsRbScore').textContent = (rb.risk_score !== undefined ? rb.risk_score : '—') + (rb.risk_score !== undefined ? '/100' : '');
+      document.getElementById('modalSmsXgScore').textContent = (xg.risk_score !== undefined ? xg.risk_score : '—') + (xg.risk_score !== undefined ? '/100' : '');
+      document.getElementById('modalSmsLlmScore').textContent = (llm.risk_score !== undefined ? llm.risk_score : '—') + (llm.risk_score !== undefined ? '/100' : '');
+
+      document.getElementById('smsDetailModal').classList.remove('hidden');
+    }
+
+    function closeSmsModal() {
+      document.getElementById('smsDetailModal').classList.add('hidden');
+    }
+
+    async function deleteSmsRecord(id) {
+      if (!confirm('Delete this SMS record?')) return;
+      try {
+        var res = await fetch('/api/sms/' + encodeURIComponent(id), { method: 'DELETE' });
+        if (res.ok) {
+          loadSmsRecords();
+        } else {
+          alert('Failed to delete SMS record.');
+        }
+      } catch (e) {
+        alert('Error: ' + e);
+      }
+    }
+
+    async function simulateDashboardSms() {
+      var choice = prompt(
+        "Choose sample SMS to simulate on server:\n" +
+        "1. Legitimate Bank OTP (DLT Verified - Safe)\n" +
+        "2. Phishing: Account Suspended KYC (Critical Smishing)\n" +
+        "3. Lottery / Prize Advance Fee (Critical Smishing)\n" +
+        "4. Personal Message (Mobile Number - Safe)\n\n" +
+        "Enter 1, 2, 3 or 4:",
+        "1"
+      );
+      if (!choice) return;
+
+      var payload = null;
+      if (choice === "1") {
+        payload = {
+          sender: "VM-HDFCBK",
+          sender_type: "dlt_registered",
+          body: "Your OTP for login to HDFC NetBanking is 591832. Valid for 10 minutes. Do not share your OTP with anyone, including bank staff."
+        };
+      } else if (choice === "2") {
+        payload = {
+          sender: "AX-HDFCBK",
+          sender_type: "dlt_registered",
+          body: "Dear customer, your bank account has been suspended due to pending KYC. Click http://hdfc-verify-kyc.com/update immediately to unblock."
+        };
+      } else if (choice === "3") {
+        payload = {
+          sender: "+919876543210",
+          sender_type: "plain_number",
+          body: "Congratulations! You won Rs 25,00,000 in lucky lottery. Send Rs 5000 processing fee to UPI id lottery@upi to claim now."
+        };
+      } else if (choice === "4") {
+        payload = {
+          sender: "+919845012345",
+          sender_type: "plain_number",
+          body: "Hey, are we still meeting for lunch at 1 PM today? Let me know!"
+        };
+      } else {
+        alert("Invalid option selected.");
+        return;
+      }
+
+      try {
+        var res = await fetch('/api/sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          loadSmsRecords();
+        } else {
+          alert('Failed to simulate SMS on server.');
+        }
+      } catch (e) {
+        alert('Error: ' + e);
+      }
+    }
+
+    async function clearAllSmsRecords() {
+      if (!confirm('Clear all received SMS messages? This cannot be undone.')) return;
+      try {
+        var res = await fetch('/api/sms', { method: 'DELETE' });
+        if (res.ok) {
+          loadSmsRecords();
+        } else {
+          alert('Failed to clear SMS messages.');
+        }
+      } catch (e) {
+        alert('Error: ' + e);
+      }
+    }
+
+    // Initial load & Polling Intervals
+    fetchStatus();
+    pollLastCall();
+    loadSmsRecords();
+    setInterval(fetchStatus, 3000);
+    setInterval(pollLastCall, 1500);
+    setInterval(pollSmsBadge, 4000);
+
+  </script>
+</body>
+
+</html>

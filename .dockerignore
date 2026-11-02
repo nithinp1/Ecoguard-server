@@ -1,0 +1,30 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.cache
+*.log
+*.tmp
+
+# Runtime settings may contain API keys; never bake persistent data into images.
+data
+old
+Git -test files
+
+# Host secrets, backups, archived UI/source, and generated mobile artifacts
+.env
+.env.*
+*.env
+*.bak
+*.bak_*
+server_backup_poc.py
+session-*.md
+stitch_scamshield_ai_security_dashboard
+stitch_scamshield_ai_security_dashboard.zip
+android
+Advanced Versions

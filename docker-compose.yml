@@ -1,0 +1,53 @@
+services:
+  scam-detection-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scam-detection-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # STT Provider Options: whisper, nemotron, sarvam
+      - STT_PROVIDER=${STT_PROVIDER:-whisper}
+      - SARVAM_API_KEY=${SARVAM_API_KEY:-}
+      - SARVAM_MODEL=${SARVAM_MODEL:-saaras:v4}
+      - SARVAM_MODE=${SARVAM_MODE:-transcribe}
+      - SARVAM_LANGUAGE=${SARVAM_LANGUAGE:-auto}
+      - NVIDIA_ASR_MODEL=${NVIDIA_ASR_MODEL:-nvidia/nemotron-speech-streaming-en-0.6b}
+      # Detection Mode Options: all (LLM + XGBoost + Rule-Based), llm_only, xgboost_only, rulebased_only
+      - DETECTION_MODE=all
+      # Whisper STT Model Options: small, medium, large-v3
+      - WHISPER_MODEL=${WHISPER_MODEL:-medium}
+      - WHISPER_LANGUAGE=${WHISPER_LANGUAGE:-auto}
+      - CALL_INACTIVITY_TIMEOUT=${CALL_INACTIVITY_TIMEOUT:-20.0}
+      # Ollama Host: 'host.docker.internal' connects to Ollama running on Windows host
+      - OLLAMA_HOST=host.docker.internal
+      - OLLAMA_MODEL=phi3.5
+      - DATA_DIR=/app/data
+    volumes:
+      # Persist dashboard configuration, API keys, calls, transcripts, and recordings
+      - ./data:/app/data
+      - ./templates:/app/templates
+      # Deployment defaults only; dashboard changes are saved under /app/data.
+      - ./.env:/app/.env:ro
+      # Cache downloaded faster-whisper & nemotron models to avoid redownloading on container rebuilds
+      - whisper-cache:/root/.cache/huggingface
+    extra_hosts:
+      # Allows the container to access Ollama on Windows host without complex networking
+      - "host.docker.internal:host-gateway"
+    # GPU Acceleration via NVIDIA Container Toolkit (WSL2 / Docker Desktop)
+    # If running on a CPU-only host or without nvidia-container-toolkit, comment out the 'deploy' block below.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  whisper-cache:
+    driver: local
