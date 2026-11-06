@@ -71,6 +71,19 @@ Detailed architectural diagrams, sequence flows, and model benchmarks are availa
 
 ## 🚀 Quickstart
 
+### Published Docker Image
+
+Every push to `main` publishes `ghcr.io/nithinp1/echoguard-server:latest` and a commit-specific `sha-*` tag. Pushing a version tag such as `v1.2.0` also publishes version tags. The image is linked to this repository through its OCI source label.
+
+To update a server already running with Docker Compose, pull the new image and recreate the container:
+
+```bash
+docker compose pull
+docker compose up -d --no-build
+```
+
+The Compose file retains its build configuration for local builds. To build locally instead of using GHCR, run `docker compose up --build -d`.
+
 ### Prerequisites
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
 - *(Optional for local GPU)* NVIDIA Container Toolkit & CUDA Drivers

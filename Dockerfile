@@ -5,6 +5,9 @@
 
 FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04
 
+LABEL org.opencontainers.image.source="https://github.com/nithinp1/Ecoguard-server"
+LABEL org.opencontainers.image.description="Echoguard real-time scam call and smishing detection server"
+
 # Avoid interactive dialogs during apt installation
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1

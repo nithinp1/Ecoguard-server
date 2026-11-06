@@ -1,5 +1,6 @@
 services:
   scam-detection-server:
+    image: ghcr.io/nithinp1/echoguard-server:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -30,7 +31,6 @@ services:
     volumes:
       # Persist dashboard configuration, API keys, calls, transcripts, and recordings
       - ./data:/app/data
-      - ./templates:/app/templates
       # Deployment defaults only; dashboard changes are saved under /app/data.
       - ./.env:/app/.env:ro
       # Cache downloaded faster-whisper & nemotron models to avoid redownloading on container rebuilds
