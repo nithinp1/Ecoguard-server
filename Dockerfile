@@ -1,5 +1,5 @@
 # ==============================================================================
-# ScamShield Server - Production Dockerfile (CUDA 12 + Python 3.10 + Faster-Whisper + Local Nemotron)
+# Echoguard Server - Production Dockerfile (CUDA 12 + Python 3.10 + Faster-Whisper + Local Nemotron)
 # Resolves Windows DLL loading issues (cuBLAS, cuDNN, CTranslate2) by running on Linux.
 # ==============================================================================
 

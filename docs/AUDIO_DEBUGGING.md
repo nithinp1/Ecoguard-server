@@ -4,7 +4,7 @@
 
 Docker starts `uvicorn server:app` using the root `server.py`.
 The Android source reviewed in the initial investigation, then under
-`android/app/src/main/java/com/example/scamdetection/ScamDetectionService.kt`,
+`app/src/main/java/com/echoguard/companion/ScamDetectionService.kt`,
 captured 16 kHz mono PCM16 and sent approximately six-second WAV messages.
 That source is no longer at this workspace path, and the installed APK version
 has not been identified. The subsequent live logs show a 3.008-second input;

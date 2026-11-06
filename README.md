@@ -1,14 +1,14 @@
-# EcoGuard Server
+# Echoguard Server
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Docker-CUDA%2012-2496ED.svg?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-High-performance, real-time backend engine for automated scam call and smishing detection. **EcoGuard Server** processes live streaming audio and SMS text via WebSockets, executing a low-latency multi-engine detection ensemble (LLM + XGBoost + Heuristic Rule Engine) with pluggable Speech-to-Text (STT) providers.
+High-performance, real-time backend engine for automated scam call and smishing detection. **Echoguard Server** processes live streaming audio and SMS text via WebSockets, executing a low-latency multi-engine detection ensemble (LLM + XGBoost + Heuristic Rule Engine) with pluggable Speech-to-Text (STT) providers.
 
 > 📱 **Client Application:**  
-> The companion Android client that captures on-device calls and SMS in real-time is hosted in a separate repository: **[android-antiscam-app](https://github.com/nithinp1/android-antiscam-app)**.
+> The companion Android client that captures on-device calls and SMS in real-time is hosted in a separate repository: **[Echoguard-companion-app](https://github.com/nithinp1/Echoguard-companion-app)**.
 
 ---
 
@@ -37,12 +37,12 @@ High-performance, real-time backend engine for automated scam call and smishing 
 
 ```text
        ┌────────────────────────────────────────────────────────┐
-       │     Mobile Client (android-antiscam-app) / WebSocket   │
+       │     Mobile Client (Echoguard-companion-app) / WebSocket   │
        └───────────────────────────┬────────────────────────────┘
                                    │ Streaming Audio / SMS
                                    ▼
 ┌───────────────────────────────────────────────────────────────────────────┐
-│                           EcoGuard Server                                 │
+│                           Echoguard Server                                 │
 │                                                                           │
 │   ┌────────────────────────┐         ┌────────────────────────────────┐   │
 │   │ Audio Stream Ingestion │ ───────►│    Pluggable STT Pipeline      │   │
@@ -153,4 +153,4 @@ python tests/test_client.py test_samples/scam_sample.wav
 
 ## 🔗 Related Repositories
 
-- **Android Companion App:** [nithinp1/android-antiscam-app](https://github.com/nithinp1/android-antiscam-app) — Mobile client for on-device call interception and audio streaming.
+- **Android Companion App:** [nithinp1/Echoguard-companion-app](https://github.com/nithinp1/Echoguard-companion-app) — Mobile client for on-device call interception and audio streaming.

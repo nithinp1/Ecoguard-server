@@ -1,4 +1,4 @@
-"""ScamShield AI Server.
+"""Echoguard AI Server.
 Production-ready with Web UI Dashboard, Call Recording, Transcripts History,
 Persistent Last-Call State, and Multi-Engine Scoring (LLM + XGBoost + Rule-Based).
 """
@@ -59,7 +59,7 @@ from runtime_config import RuntimeConfigError, RuntimeConfigStore
 # Logging & Polling Filter (Silences repetitive /api/status & /api/last-call spam)
 # ---------------------------------------------------------------------------
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("scamshield-server")
+logger = logging.getLogger("echoguard-server")
 
 
 class EndpointFilter(logging.Filter):
@@ -1457,7 +1457,7 @@ def clear_all_saved_sms() -> bool:
 # ---------------------------------------------------------------------------
 # FastAPI Application & Startup
 # ---------------------------------------------------------------------------
-app = FastAPI(title="ScamShield AI Server", version="2.0")
+app = FastAPI(title="Echoguard AI Server", version="2.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -2352,7 +2352,7 @@ async def sms_check(ws: WebSocket):
         try:
             payload = json.loads(msg["text"])
             if isinstance(payload, dict):
-                # Supports both ScamShield v3 {"sender_type": ..., "body": ...}
+                # Supports both Echoguard v3 {"sender_type": ..., "body": ...}
                 # and Android BCR {"type": "sms", "body": ..., "timestamp": ...}
                 body = str(payload.get("body") or payload.get("message") or payload.get("text") or "")
                 raw_sender_type = payload.get("sender_type")
@@ -2971,7 +2971,7 @@ def dashboard_html():
     if os.path.exists(index_path):
         with open(index_path, "r", encoding="utf-8") as f:
             return f.read()
-    return "<h1>ScamShield Dashboard Error: templates/index.html not found</h1>"
+    return "<h1>Echoguard Dashboard Error: templates/index.html not found</h1>"
 
 
 if __name__ == "__main__":
